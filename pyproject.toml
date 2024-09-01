@@ -1,0 +1,20 @@
+[project]
+name = "pylox"
+requires-python = ">= 3.12"
+version = "0.1.0"
+
+[project.optional-dependencies]
+dev = [
+    "mypy==1.11.2",
+    "black==24.8.0",
+    "flake8==7.0.0",
+    "flake8-unused-arguments==0.0.13",
+]
+
+[project.scripts]
+lox = "pylox:main.main"
+
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+

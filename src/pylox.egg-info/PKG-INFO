@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: pylox
+Version: 0.1.0
+Requires-Python: >=3.12
+Provides-Extra: dev
+Requires-Dist: mypy==1.11.2; extra == "dev"
+Requires-Dist: black==24.8.0; extra == "dev"
+Requires-Dist: flake8==7.0.0; extra == "dev"
+Requires-Dist: flake8-unused-arguments==0.0.13; extra == "dev"

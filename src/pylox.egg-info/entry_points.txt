@@ -1,0 +1,2 @@
+[console_scripts]
+lox = pylox:main.main

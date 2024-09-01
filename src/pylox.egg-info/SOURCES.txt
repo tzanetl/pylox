@@ -1,0 +1,8 @@
+pyproject.toml
+src/pylox/main.py
+src/pylox.egg-info/PKG-INFO
+src/pylox.egg-info/SOURCES.txt
+src/pylox.egg-info/dependency_links.txt
+src/pylox.egg-info/entry_points.txt
+src/pylox.egg-info/requires.txt
+src/pylox.egg-info/top_level.txt
