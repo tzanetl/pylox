@@ -2,6 +2,10 @@
 name = "pylox"
 requires-python = ">= 3.12"
 version = "0.1.0"
+license = { file = "LICENSE" }
+description = "Interpreter written for `lox` from https://craftinginterpreters.com"
+readme = "README.md"
+authors = [{name="Taneli"}]
 
 [project.optional-dependencies]
 dev = [
