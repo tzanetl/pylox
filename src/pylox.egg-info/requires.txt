@@ -1,6 +1,0 @@
-
-[dev]
-mypy==1.11.2
-black==24.8.0
-flake8==7.0.0
-flake8-unused-arguments==0.0.13

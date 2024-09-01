@@ -1,4 +1,18 @@
+# IDE
 .vscode
-*.pyc
+
+# Virtual environtment
 venv/*
-.mypy_cache/*
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.egg-info/
