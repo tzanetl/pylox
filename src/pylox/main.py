@@ -2,6 +2,7 @@ import argparse
 import sys
 import os
 
+import pylox.version
 
 type path_like = str | bytes | os.PathLike
 
@@ -21,8 +22,14 @@ def run_prompt():
 
 
 def main(argv: list[str]):
-    arg_parser = argparse.ArgumentParser("lox")
+    arg_parser = argparse.ArgumentParser("pylox", description=pylox.version.__desc__)
     arg_parser.add_argument("script", action="append", nargs="+")
+    arg_parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {pylox.version.__version__}",
+    )
 
     parsed = arg_parser.parse_args(argv)
 
