@@ -1,10 +1,10 @@
 import argparse
-import sys
 import os
+import sys
 from pathlib import Path
 
 import pylox.version
-from pylox.lox import run, ErrorReported
+from pylox.lox import ErrorReported, run
 
 type path_like = str | bytes | os.PathLike
 
