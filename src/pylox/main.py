@@ -4,21 +4,19 @@ import os
 from pathlib import Path
 
 import pylox.version
-from .scanner import Scanner
+from pylox.lox import run, ErrorReported
 
 type path_like = str | bytes | os.PathLike
-
-
-def run(source: str):
-    scanner = Scanner(source)
-    for token in scanner.scan_tokens():
-        print(token)
 
 
 def run_file(path: path_like):
     with open(path, "r") as fs:
         source = fs.read()
-    run(source)
+
+    try:
+        run(source)
+    except ErrorReported:
+        sys.exit(65)
 
 
 def run_prompt():
@@ -26,7 +24,10 @@ def run_prompt():
         line = input("> ")
         if not line:
             break
-        run(line)
+        try:
+            run(line)
+        except ErrorReported:
+            pass
 
 
 def parse_input(s: str) -> Path | None:
