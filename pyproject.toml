@@ -38,6 +38,10 @@ enable_incomplete_feature = ["NewGenericSyntax"]
 
 [tool.flake8]
 max-line-length = 100
+ignore = [
+    #whitespace before ':'
+    "E203",
+]
 
 [tool.black]
 line-length = 100

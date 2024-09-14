@@ -3,7 +3,7 @@ from enum import Enum, auto
 
 
 class TokenType(Enum):
-    # Single-character tokens.
+    # Single-character tokens
     LEFT_PAREN = auto()
     RIGHT_PAREN = auto()
     LEFT_BRACE = auto()
@@ -16,7 +16,7 @@ class TokenType(Enum):
     SLASH = auto()
     STAR = auto()
 
-    # One or two character tokens.
+    # One or two character tokens
     BANG = auto()
     BANG_EQUAL = auto()
     EQUAL = auto()
@@ -26,7 +26,7 @@ class TokenType(Enum):
     LESS = auto()
     LESS_EQUAL = auto()
 
-    # Literals.
+    # Literals
     IDENTIFIER = auto()
     STRING = auto()
     NUMBER = auto()
@@ -79,8 +79,38 @@ class Scanner:
         self.current = 0
         self.line = 1
 
-    def scan_single_token(self):
-        raise NotImplementedError()
+    def advance(self) -> str:
+        self.current += 1
+        return self.source[self.current]
+
+    def add_token(self, type: TokenType, literal: LiteralValue = None) -> None:
+        text = self.source[self.start : self.current]
+        self.tokens.append(Token(type, text, literal, self.line))
+
+    def scan_single_token(self) -> None:
+        char = self.advance()
+        match char:
+            # Single-character tokens
+            case "(":
+                self.add_token(TokenType.LEFT_PAREN)
+            case ")":
+                self.add_token(TokenType.RIGHT_PAREN)
+            case "{":
+                self.add_token(TokenType.LEFT_BRACE)
+            case "}":
+                self.add_token(TokenType.RIGHT_BRACE)
+            case ",":
+                self.add_token(TokenType.COMMA)
+            case ".":
+                self.add_token(TokenType.DOT)
+            case "-":
+                self.add_token(TokenType.MINUS)
+            case "+":
+                self.add_token(TokenType.PLUS)
+            case ";":
+                self.add_token(TokenType.SEMICOLON)
+            case "*":
+                self.add_token(TokenType.STAR)
 
     def scan_tokens(self) -> list[Token]:
         while not self.is_at_end():
