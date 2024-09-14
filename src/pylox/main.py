@@ -4,7 +4,9 @@ import sys
 from pathlib import Path
 
 import pylox.version
-from pylox.lox import ErrorReported, run
+
+from .error import HadError
+from .lox import run
 
 type path_like = str | bytes | os.PathLike
 
@@ -13,9 +15,8 @@ def run_file(path: path_like):
     with open(path, "r") as fs:
         source = fs.read()
 
-    try:
-        run(source)
-    except ErrorReported:
+    run(source)
+    if HadError.had_error:
         sys.exit(65)
 
 
@@ -24,10 +25,9 @@ def run_prompt():
         line = input("> ")
         if not line:
             break
-        try:
-            run(line)
-        except ErrorReported:
-            pass
+
+        run(line)
+        HadError.had_error = False
 
 
 def parse_input(s: str) -> Path | None:
@@ -43,9 +43,7 @@ def parse_input(s: str) -> Path | None:
 
 def main(argv: list[str]):
     arg_parser = argparse.ArgumentParser("pylox", description=pylox.version.__desc__)
-    arg_parser.add_argument(
-        "input", action="store", nargs="?", default="", type=parse_input
-    )
+    arg_parser.add_argument("input", action="store", nargs="?", default="", type=parse_input)
     arg_parser.add_argument(
         "-V",
         "--version",

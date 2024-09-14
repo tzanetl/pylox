@@ -1,6 +1,8 @@
 import typing
 from enum import Enum, auto
 
+from . import error
+
 
 class TokenType(Enum):
     # Single-character tokens
@@ -67,6 +69,9 @@ class Token:
     def __str__(self) -> str:
         return f"{self.type} {self.lexeme} {self.literal}"
 
+    def __repr__(self) -> str:
+        return str(self)
+
 
 class Scanner:
     __slots__ = ("source", "tokens", "start", "current", "line")
@@ -80,8 +85,9 @@ class Scanner:
         self.line = 1
 
     def advance(self) -> str:
+        char = self.source[self.current]
         self.current += 1
-        return self.source[self.current]
+        return char
 
     def add_token(self, type: TokenType, literal: LiteralValue = None) -> None:
         text = self.source[self.start : self.current]
@@ -111,6 +117,8 @@ class Scanner:
                 self.add_token(TokenType.SEMICOLON)
             case "*":
                 self.add_token(TokenType.STAR)
+            case _:
+                error.error(self.line, "Unexpected character.")
 
     def scan_tokens(self) -> list[Token]:
         while not self.is_at_end():
