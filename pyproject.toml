@@ -13,6 +13,7 @@ dev = [
     "flake8==7.1.0",
     "Flake8-pyproject==1.2.3",
     "flake8-unused-arguments==0.0.13",
+    "isort==5.13.2",
 ]
 
 [project.scripts]
@@ -37,3 +38,10 @@ enable_incomplete_feature = ["NewGenericSyntax"]
 
 [tool.flake8]
 max-line-length = 100
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+line_length = 100
+profile = "black"
