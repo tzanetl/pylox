@@ -101,6 +101,11 @@ class Scanner:
         self.current += 1
         return True
 
+    def peek(self) -> str:
+        if self.is_at_end():
+            return "\0"
+        return self.source[self.current]
+
     def scan_single_token(self) -> None:
         char = self.advance()
         match char:
@@ -134,6 +139,16 @@ class Scanner:
                 self.add_token(TokenType.LESS_EQUAL if self.match("=") else TokenType.LESS)
             case ">":
                 self.add_token(TokenType.GREATER_EQUAL if self.match("=") else TokenType.GREATER)
+            case "/":
+                if self.match("/"):
+                    while self.peek() != "\n" and not self.is_at_end():
+                        self.advance()
+                else:
+                    self.add_token(TokenType.SLASH)
+            case " " | "\r" | "\t":
+                pass
+            case "\n":
+                self.line += 1
             case _:
                 error.error(self.line, "Unexpected character.")
 
