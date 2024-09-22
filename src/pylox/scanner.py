@@ -54,7 +54,7 @@ class TokenType(Enum):
     EOF = auto()
 
 
-type LiteralValue = typing.Any
+type LiteralValue = str | None
 
 
 class Token:
@@ -106,6 +106,23 @@ class Scanner:
             return "\0"
         return self.source[self.current]
 
+    def string(self) -> None:
+        while self.peek() != '"' and not self.is_at_end():
+            if self.peek() == "\n":
+                self.line += 1
+            self.advance()
+
+        if self.is_at_end():
+            error.error(self.line, "Unterminated string.")
+            return
+
+        # The closing ".
+        self.advance()
+
+        # Trim surrounding quotes
+        value = self.source[self.start + 1 : self.current - 1]
+        self.add_token(TokenType.STRING, value)
+
     def scan_single_token(self) -> None:
         char = self.advance()
         match char:
@@ -145,10 +162,14 @@ class Scanner:
                         self.advance()
                 else:
                     self.add_token(TokenType.SLASH)
+            # "Meaningless" characters
             case " " | "\r" | "\t":
                 pass
             case "\n":
                 self.line += 1
+            # Literals
+            case '"':
+                self.string()
             case _:
                 error.error(self.line, "Unexpected character.")
 
