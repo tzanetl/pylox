@@ -1,4 +1,3 @@
-import typing
 from enum import Enum, auto
 
 from . import error
@@ -54,7 +53,7 @@ class TokenType(Enum):
     EOF = auto()
 
 
-type LiteralValue = str | None
+type LiteralValue = str | float | None
 
 
 class Token:
@@ -106,6 +105,11 @@ class Scanner:
             return "\0"
         return self.source[self.current]
 
+    def peek_next(self) -> str:
+        if self.current + 1 >= len(self.source):
+            return "\0"
+        return self.source[self.current + 1]
+
     def string(self) -> None:
         while self.peek() != '"' and not self.is_at_end():
             if self.peek() == "\n":
@@ -122,6 +126,20 @@ class Scanner:
         # Trim surrounding quotes
         value = self.source[self.start + 1 : self.current - 1]
         self.add_token(TokenType.STRING, value)
+
+    def is_digit(self, char: str) -> bool:
+        return char.isdigit()
+
+    def number(self) -> None:
+        while self.is_digit(self.peek()):
+            self.advance()
+
+        if self.peek() == "." and self.is_digit(self.peek_next()):
+            self.advance()
+            while self.is_digit(self.peek()):
+                self.advance()
+
+        self.add_token(TokenType.NUMBER, float(self.source[self.start : self.current]))
 
     def scan_single_token(self) -> None:
         char = self.advance()
@@ -171,7 +189,10 @@ class Scanner:
             case '"':
                 self.string()
             case _:
-                error.error(self.line, "Unexpected character.")
+                if self.is_digit(char):
+                    self.number()
+                else:
+                    error.error(self.line, "Unexpected character.")
 
     def scan_tokens(self) -> list[Token]:
         while not self.is_at_end():
