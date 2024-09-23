@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-from . import error
+from .error import error
 
 type LiteralValue = str | float | None
 
@@ -136,7 +136,7 @@ class Scanner:
             self.advance()
 
         if self.is_at_end():
-            error.error(self.line, "Unterminated string.")
+            error(self.line, "Unterminated string.")
             return
 
         # The closing ".
@@ -208,6 +208,15 @@ class Scanner:
                 if self.match("/"):
                     while self.peek() != "\n" and not self.is_at_end():
                         self.advance()
+                elif self.match("*"):
+                    while not self.is_at_end() and self.advance() != "*":
+                        pass
+                    if self.is_at_end():
+                        error(self.line, "Unclosed block comment.")
+                    elif self.peek() != "/":
+                        error(self.line, "Unexpected character.")
+                    else:
+                        self.advance()
                 else:
                     self.add_token(TokenType.SLASH)
             # "Meaningless" characters
@@ -224,7 +233,7 @@ class Scanner:
                 elif self.is_alpha(char):
                     self.identifier()
                 else:
-                    error.error(self.line, "Unexpected character.")
+                    error(self.line, "Unexpected character.")
 
     def scan_tokens(self) -> list[Token]:
         while not self.is_at_end():
