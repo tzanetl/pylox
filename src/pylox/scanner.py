@@ -2,6 +2,8 @@ from enum import Enum, auto
 
 from . import error
 
+type LiteralValue = str | float | None
+
 
 class TokenType(Enum):
     # Single-character tokens
@@ -53,7 +55,24 @@ class TokenType(Enum):
     EOF = auto()
 
 
-type LiteralValue = str | float | None
+KEYWORDS: dict[str, TokenType] = {
+    "and": TokenType.AND,
+    "class": TokenType.CLASS,
+    "else": TokenType.ELSE,
+    "false": TokenType.FALSE,
+    "for": TokenType.FOR,
+    "fun": TokenType.FUN,
+    "if": TokenType.IF,
+    "nil": TokenType.NIL,
+    "or": TokenType.OR,
+    "print": TokenType.PRINT,
+    "return": TokenType.RETURN,
+    "super": TokenType.SUPER,
+    "this": TokenType.THIS,
+    "true": TokenType.TRUE,
+    "var": TokenType.VAR,
+    "while": TokenType.WHILE,
+}
 
 
 class Token:
@@ -130,6 +149,12 @@ class Scanner:
     def is_digit(self, char: str) -> bool:
         return char.isdigit()
 
+    def is_alpha(self, char: str) -> bool:
+        return char.isalpha() or char == "_"
+
+    def is_alpha_numeric(self, char) -> bool:
+        return self.is_digit(char) or self.is_alpha(char)
+
     def number(self) -> None:
         while self.is_digit(self.peek()):
             self.advance()
@@ -140,6 +165,11 @@ class Scanner:
                 self.advance()
 
         self.add_token(TokenType.NUMBER, float(self.source[self.start : self.current]))
+
+    def identifier(self) -> None:
+        while self.is_alpha_numeric(self.peek()):
+            self.advance()
+        self.add_token(KEYWORDS.get(self.source[self.start : self.current], TokenType.IDENTIFIER))
 
     def scan_single_token(self) -> None:
         char = self.advance()
@@ -191,6 +221,8 @@ class Scanner:
             case _:
                 if self.is_digit(char):
                     self.number()
+                elif self.is_alpha(char):
+                    self.identifier()
                 else:
                     error.error(self.line, "Unexpected character.")
 
