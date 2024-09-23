@@ -22,7 +22,13 @@ def run_file(path: path_like):
 
 def run_prompt():
     while True:
-        line = input("> ")
+        try:
+            line = input("> ")
+        except EOFError:
+            return
+        except KeyboardInterrupt:
+            print("\nKeyboard interrupt.", file=sys.stderr)
+            continue
         if not line:
             break
 
