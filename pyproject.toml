@@ -8,7 +8,7 @@ authors = [{name="Taneli"}]
 
 [project.optional-dependencies]
 dev = [
-    "mypy==1.11.2",
+    "mypy==1.14.0",
     "black==24.8.0",
     "flake8==7.1.0",
     "Flake8-pyproject==1.2.3",
