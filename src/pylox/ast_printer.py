@@ -1,11 +1,9 @@
-from typing import Any
-
 from pylox.expr import Binary, ExprVisitor, Expr, Grouping, Literal, Unary
 from pylox.scanner import Token, TokenType
 
 
 class AstPrinter(ExprVisitor):
-    def print(self, expr: Expr) -> Any:
+    def print(self, expr: Expr) -> str:
         return expr.accept(self)
 
     def visit_binary_expr(self, expr: Binary) -> str:
