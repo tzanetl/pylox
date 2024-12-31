@@ -1,6 +1,7 @@
 from typing import Any, Callable
 
-from pylox.expr import Expr, Binary, Grouping, Literal, Unary
+from pylox.error import ParseError, error
+from pylox.expr import Binary, Expr, Grouping, Literal, Unary
 from pylox.scanner import Token, TokenType
 
 
@@ -63,8 +64,14 @@ class Parser:
     def peek(self) -> Token:
         return self.tokens[self.current]
 
+    def error(self, token: Token, message: str) -> ParseError:
+        error(token, message)
+        return ParseError()
+
     def consume(self, t: TokenType, message: str) -> Token:
-        raise NotImplementedError()
+        if self.check(t):
+            return self.advance()
+        raise self.error(self.peek(), message)
 
     def expression(self) -> Expr:
         return self.equality()
