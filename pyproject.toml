@@ -42,8 +42,10 @@ packages = "src"
 [tool.flake8]
 max-line-length = 100
 ignore = [
-    #whitespace before ':'
+    # whitespace before ':'
     "E203",
+    # line break before binary operator
+    "W503",
 ]
 
 [tool.black]

@@ -64,6 +64,28 @@ class Parser:
     def peek(self) -> Token:
         return self.tokens[self.current]
 
+    def synchronize(self) -> None:
+        self.advance()
+
+        while not self.is_at_end():
+            if self.previous().type == TokenType.SEMICOLON:
+                return
+
+            match self.peek().type:
+                case (
+                    TokenType.CLASS
+                    | TokenType.FUN
+                    | TokenType.VAR
+                    | TokenType.FOR
+                    | TokenType.IF
+                    | TokenType.WHILE
+                    | TokenType.PRINT
+                    | TokenType.RETURN
+                ):
+                    return
+
+            self.advance()
+
     def error(self, token: Token, message: str) -> ParseError:
         error(token, message)
         return ParseError()
