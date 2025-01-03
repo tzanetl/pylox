@@ -179,7 +179,7 @@ class Parser:
         return expr
 
     # Chapter 6 challenge 1
-    # comma -> equality ("," equality)* ;
+    # comma -> conditional ("," conditional)* ;
     @lasbo(conditional, TokenType.COMMA)
     def comma(self):
         pass
