@@ -120,6 +120,24 @@ class Parser:
             self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return Grouping(expr)
 
+        # Chapter 6 challenge 3
+        # Missing left hand expression in binary operator
+        if self.match(
+            TokenType.BANG_EQUAL,
+            TokenType.EQUAL_EQUAL,
+            TokenType.GREATER,
+            TokenType.GREATER_EQUAL,
+            TokenType.LESS,
+            TokenType.LESS_EQUAL,
+            TokenType.PLUS,
+            TokenType.SLASH,
+            TokenType.STAR,
+        ):
+            # Raising an error, unlike the example, since returning None from here causes a lot of
+            # problems with type checking
+            # https://github.com/munificent/craftinginterpreters/blob/master/note/answers/chapter06_parsing.md
+            raise self.error(self.previous(), "Missing left-hand operand.")
+
         raise self.error(self.peek(), "Expected expression.")
 
     def unary(self) -> Expr:
