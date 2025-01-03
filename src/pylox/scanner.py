@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-from .error import error
+import pylox.error as error
 
 type LiteralValue = str | float | None
 
@@ -136,7 +136,7 @@ class Scanner:
             self.advance()
 
         if self.is_at_end():
-            error(self.line, "Unterminated string.")
+            error.error(self.line, "Unterminated string.")
             return
 
         # The closing ".
@@ -212,9 +212,9 @@ class Scanner:
                     while not self.is_at_end() and self.advance() != "*":
                         pass
                     if self.is_at_end():
-                        error(self.line, "Unclosed block comment.")
+                        error.error(self.line, "Unclosed block comment.")
                     elif self.peek() != "/":
-                        error(self.line, "Unexpected character.")
+                        error.error(self.line, "Unexpected character.")
                     else:
                         self.advance()
                 else:
@@ -233,7 +233,7 @@ class Scanner:
                 elif self.is_alpha(char):
                     self.identifier()
                 else:
-                    error(self.line, "Unexpected character.")
+                    error.error(self.line, "Unexpected character.")
 
     def scan_tokens(self) -> list[Token]:
         while not self.is_at_end():

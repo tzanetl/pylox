@@ -1,6 +1,6 @@
 from typing import Any, Callable
 
-from pylox.error import ParseError, error
+import pylox.error as error
 from pylox.expr import Binary, Expr, Grouping, Literal, Unary
 from pylox.scanner import Token, TokenType
 
@@ -31,6 +31,12 @@ class Parser:
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
         self.current = 0
+
+    def parse(self) -> Expr | None:
+        try:
+            return self.expression()
+        except error.ParseError:
+            return None
 
     def match(self, *types: TokenType) -> bool:
         """
@@ -86,9 +92,9 @@ class Parser:
 
             self.advance()
 
-    def error(self, token: Token, message: str) -> ParseError:
-        error(token, message)
-        return ParseError()
+    def error(self, token: Token, message: str) -> error.ParseError:
+        error.error(token, message)
+        return error.ParseError()
 
     def consume(self, t: TokenType, message: str) -> Token:
         if self.check(t):
@@ -114,7 +120,7 @@ class Parser:
             self.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return Grouping(expr)
 
-        raise NotImplementedError("Oh my goodness oh my damn!")
+        raise self.error(self.peek(), "Expected expression.")
 
     def unary(self) -> Expr:
         if self.match(TokenType.BANG, TokenType.MINUS):

@@ -1,7 +1,7 @@
 import sys
 from typing import overload
 
-from pylox.scanner import Token, TokenType
+import pylox.scanner as scanner
 
 
 class PyloxError(Exception):
@@ -27,14 +27,14 @@ def error(item: int, message: str) -> None:  # noqa: U100
 
 
 @overload
-def error(item: Token, message: str) -> None:  # noqa: U100
+def error(item: scanner.Token, message: str) -> None:  # noqa: U100
     pass
 
 
-def error(item: int | Token, message: str) -> None:
+def error(item: int | scanner.Token, message: str) -> None:
     if isinstance(item, int):
         return _error_line(item, message)
-    if isinstance(item, Token):
+    if isinstance(item, scanner.Token):
         return _error_token(item, message)
     raise ValueError(f"unknown item type {type(item)}")
 
@@ -43,8 +43,8 @@ def _error_line(line: int, message: str) -> None:
     report(line, "", message)
 
 
-def _error_token(token: Token, message: str) -> None:
-    if token.type == TokenType.EOF:
+def _error_token(token: scanner.Token, message: str) -> None:
+    if token.type == scanner.TokenType.EOF:
         report(token.line, " at end", message)
     else:
         report(token.line, f" at '{token.lexeme}'", message)
