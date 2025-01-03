@@ -18,6 +18,8 @@ class TokenType(Enum):
     SEMICOLON = auto()
     SLASH = auto()
     STAR = auto()
+    TERNARY = auto()
+    COLON = auto()
 
     # One or two character tokens
     BANG = auto()
@@ -195,6 +197,10 @@ class Scanner:
                 self.add_token(TokenType.SEMICOLON)
             case "*":
                 self.add_token(TokenType.STAR)
+            case "?":
+                self.add_token(TokenType.TERNARY)
+            case ":":
+                self.add_token(TokenType.COLON)
             # One or two character tokens
             case "!":
                 self.add_token(TokenType.BANG_EQUAL if self.match("=") else TokenType.BANG)

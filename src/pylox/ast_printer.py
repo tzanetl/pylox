@@ -1,4 +1,4 @@
-from pylox.expr import Binary, ExprVisitor, Expr, Grouping, Literal, Unary
+from pylox.expr import Binary, Conditional, Expr, ExprVisitor, Grouping, Literal, Unary
 from pylox.scanner import Token, TokenType
 
 
@@ -19,6 +19,9 @@ class AstPrinter(ExprVisitor):
 
     def visit_unary_expr(self, expr: Unary) -> str:
         return self.parenthesize(expr.operator.lexeme, expr.right)
+
+    def visit_conditional_expr(self, expr: Conditional) -> str:
+        return self.parenthesize("conditional", expr.condition, expr.if_true, expr.if_false)
 
     def parenthesize(self, name: str, *exprs: Expr) -> str:
         expr_str = " ".join(str(e.accept(self)) for e in exprs)

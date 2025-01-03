@@ -1,6 +1,6 @@
 import argparse
-from pathlib import Path
 from io import TextIOWrapper
+from pathlib import Path
 
 
 class WriteLn:
@@ -16,10 +16,11 @@ def generate_ast(output_dir: Path) -> None:
         output_dir,
         "Expr",
         [
-            "Binary   : Expr left, Token operator, Expr right",
-            "Grouping : Expr expression",
-            "Literal  : Any value",
-            "Unary    : Token operator, Expr right",
+            "Binary      : Expr left, Token operator, Expr right",
+            "Grouping    : Expr expression",
+            "Literal     : Any value",
+            "Unary       : Token operator, Expr right",
+            "Conditional : Expr condition, Expr if_true, Expr if_false",
         ],
     )
 

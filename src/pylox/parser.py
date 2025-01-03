@@ -1,7 +1,7 @@
 from typing import Any, Callable
 
 import pylox.error as error
-from pylox.expr import Binary, Expr, Grouping, Literal, Unary
+from pylox.expr import Binary, Conditional, Expr, Grouping, Literal, Unary
 from pylox.scanner import Token, TokenType
 
 
@@ -145,8 +145,23 @@ class Parser:
     def equality(self):
         pass
 
-    # Chapeter 6 challenge 1
-    # comma -> equality (, equality)* ;
-    @lasbo(equality, TokenType.COMMA)
+    # Chapter 6 challenge 2
+    # conditional -> equality ( "?" expression ":" expression )? ;
+    def conditional(self) -> Expr:
+        expr = self.equality()
+
+        if self.match(TokenType.TERNARY):
+            if_true = self.expression()
+            self.consume(
+                TokenType.COLON, "Expect ':' after if true branch of conditional expression."
+            )
+            if_false = self.expression()
+            return Conditional(expr, if_true, if_false)
+
+        return expr
+
+    # Chapter 6 challenge 1
+    # comma -> equality ("," equality)* ;
+    @lasbo(conditional, TokenType.COMMA)
     def comma(self):
         pass

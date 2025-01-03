@@ -57,6 +57,19 @@ class Unary(Expr):
         return visitor.visit_unary_expr(self)
 
 
+class Conditional(Expr):
+    __slots___ = ("condition", "if_true", "if_false")
+
+    def __init__(self, condition: Expr, if_true: Expr, if_false: Expr) -> None:
+        super().__init__()
+        self.condition = condition
+        self.if_true = if_true
+        self.if_false = if_false
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_conditional_expr(self)
+
+
 class ExprVisitor(ABC):
     @abstractmethod
     def visit_binary_expr(self, expr: Binary):  # noqa: U100
@@ -72,4 +85,8 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_unary_expr(self, expr: Unary):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_conditional_expr(self, expr: Conditional):  # noqa: U100
         raise NotImplementedError()
