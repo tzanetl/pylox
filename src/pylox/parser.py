@@ -102,7 +102,7 @@ class Parser:
         raise self.error(self.peek(), message)
 
     def expression(self) -> Expr:
-        return self.equality()
+        return self.comma()
 
     def primary(self) -> Expr:
         if self.match(TokenType.FALSE):
@@ -143,4 +143,10 @@ class Parser:
 
     @lasbo(comparison, TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)
     def equality(self):
+        pass
+
+    # Chapeter 6 challenge 1
+    # comma -> equality (, equality)* ;
+    @lasbo(equality, TokenType.COMMA)
+    def comma(self):
         pass
