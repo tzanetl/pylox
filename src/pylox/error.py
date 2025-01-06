@@ -20,6 +20,7 @@ class LoxRuntimeError(PyloxError):
 
 class HadError:
     had_error = False
+    had_runtime_error = False
 
 
 def report(line: int, where: str, message: str) -> None:
@@ -54,3 +55,8 @@ def _error_token(token: scanner.Token, message: str) -> None:
         report(token.line, " at end", message)
     else:
         report(token.line, f" at '{token.lexeme}'", message)
+
+
+def runtime_error(exc: LoxRuntimeError) -> None:
+    print(f"{exc}\n[line {exc.token.line}]")
+    HadError.had_runtime_error = True

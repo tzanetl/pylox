@@ -18,6 +18,8 @@ def run_file(path: path_like):
     run(source)
     if HadError.had_error:
         sys.exit(65)
+    if HadError.had_runtime_error:
+        sys.exit(70)
 
 
 def run_prompt():

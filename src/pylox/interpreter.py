@@ -6,6 +6,13 @@ from pylox.scanner import Token, TokenType
 
 
 class Interpreter(ExprVisitor):
+    def interpret(self, expr: Expr) -> None:
+        try:
+            value = self.evaluate(expr)
+            print(stringify(value))
+        except error.LoxRuntimeError as exc:
+            error.runtime_error(exc)
+
     def evaluate(self, expr: Expr) -> Any:
         return expr.accept(self)
 
@@ -99,3 +106,19 @@ def check_number_operand2(operator: Token, left: Any, right: Any) -> None:
     if isinstance(left, float) and isinstance(right, float):
         return
     raise error.LoxRuntimeError(operator, "Operands must be numbers.")
+
+
+def stringify(value: Any) -> str:
+    if value is None:
+        return "nil"
+
+    if isinstance(value, float):
+        text = str(value)
+        if text.endswith(".0"):
+            text = text[:-2]
+        return text
+
+    if isinstance(value, bool):
+        return str(value).lower()
+
+    return str(value)

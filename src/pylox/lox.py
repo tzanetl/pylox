@@ -1,7 +1,9 @@
-from pylox.ast_printer import AstPrinter
 from pylox.error import HadError
+from pylox.interpreter import Interpreter
 from pylox.parser import Parser
 from pylox.scanner import Scanner
+
+INTERPRETER = Interpreter()
 
 
 def run(source: str) -> None:
@@ -16,4 +18,4 @@ def run(source: str) -> None:
 
     assert expression is not None
 
-    print(AstPrinter().print(expression))
+    INTERPRETER.interpret(expression)
