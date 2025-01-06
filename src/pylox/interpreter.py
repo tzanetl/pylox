@@ -1,6 +1,6 @@
 from typing import Any
 
-from pylox.expr import Binary, Expr, ExprVisitor, Grouping, Literal, Unary
+from pylox.expr import Binary, Conditional, Expr, ExprVisitor, Grouping, Literal, Unary
 from pylox.scanner import TokenType
 
 
@@ -56,8 +56,11 @@ class Interpreter(ExprVisitor):
 
         raise NotImplementedError("unreachable")
 
-    def visit_conditional_expr(self, expr):
-        return super().visit_conditional_expr(expr)
+    def visit_conditional_expr(self, expr: Conditional) -> Any:
+        condition = self.evaluate(expr.condition)
+        if is_truthy(condition):
+            return self.evaluate(expr.if_true)
+        return self.evaluate(expr.if_false)
 
 
 def is_truthy(value: Any) -> bool:
