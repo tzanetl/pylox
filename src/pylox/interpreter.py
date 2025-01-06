@@ -72,6 +72,11 @@ class Interpreter(ExprVisitor):
                 return not is_equal(left, right)
             case TokenType.EQUAL_EQUAL:
                 return is_equal(left, right)
+            case TokenType.COMMA:
+                # From Wikipedia https://en.wikipedia.org/wiki/Comma_operator:
+                # ... the comma operator is a binary operator that evaluates its first operand and
+                # discards the result, and then evaluates the second operand and returns this value
+                return right
 
         raise NotImplementedError("unreachable")
 
