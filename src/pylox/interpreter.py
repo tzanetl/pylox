@@ -1,7 +1,8 @@
 from typing import Any
 
+import pylox.error as error
 from pylox.expr import Binary, Conditional, Expr, ExprVisitor, Grouping, Literal, Unary
-from pylox.scanner import TokenType
+from pylox.scanner import Token, TokenType
 
 
 class Interpreter(ExprVisitor):
@@ -19,6 +20,7 @@ class Interpreter(ExprVisitor):
 
         match expr.operator.type:
             case TokenType.MINUS:
+                check_number_operand(expr.operator, right)
                 return -float(right)
             case TokenType.BANG:
                 return not is_truthy(right)
@@ -31,23 +33,33 @@ class Interpreter(ExprVisitor):
 
         match expr.operator.type:
             case TokenType.GREATER:
+                check_number_operand2(expr.operator, left, right)
                 return float(left) > float(right)
             case TokenType.GREATER_EQUAL:
+                check_number_operand2(expr.operator, left, right)
                 return float(left) >= float(right)
             case TokenType.LESS:
+                check_number_operand2(expr.operator, left, right)
                 return float(left) < float(right)
             case TokenType.LESS_EQUAL:
+                check_number_operand2(expr.operator, left, right)
                 return float(left) <= float(right)
             case TokenType.PLUS:
                 if isinstance(left, float) and isinstance(right, float):
                     return float(left) + float(right)
                 if isinstance(left, str) and isinstance(right, str):
                     return str(left) + str(right)
+                raise error.LoxRuntimeError(
+                    expr.operator, "Operands must be two numbers or two strings."
+                )
             case TokenType.MINUS:
+                check_number_operand2(expr.operator, left, right)
                 return float(left) - float(right)
             case TokenType.SLASH:
+                check_number_operand2(expr.operator, left, right)
                 return float(left) / float(right)
             case TokenType.STAR:
+                check_number_operand2(expr.operator, left, right)
                 return float(left) * float(right)
             case TokenType.BANG_EQUAL:
                 return not is_equal(left, right)
@@ -75,3 +87,15 @@ def is_truthy(value: Any) -> bool:
 def is_equal(a: Any, b: Any) -> bool:
     # None is only equal to None
     return a == b
+
+
+def check_number_operand(operator: Token, operand: Any) -> None:
+    if isinstance(operand, float):
+        return
+    raise error.LoxRuntimeError(operator, "Operand must be a number.")
+
+
+def check_number_operand2(operator: Token, left: Any, right: Any) -> None:
+    if isinstance(left, float) and isinstance(right, float):
+        return
+    raise error.LoxRuntimeError(operator, "Operands must be numbers.")

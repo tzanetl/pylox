@@ -12,6 +12,12 @@ class ParseError(PyloxError):
     """Parser encountered an invalid token"""
 
 
+class LoxRuntimeError(PyloxError):
+    def __init__(self, token: scanner.Token, message: str) -> None:
+        super().__init__(message)
+        self.token = token
+
+
 class HadError:
     had_error = False
 
