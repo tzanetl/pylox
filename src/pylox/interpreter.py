@@ -64,7 +64,10 @@ class Interpreter(ExprVisitor):
                 return float(left) - float(right)
             case TokenType.SLASH:
                 check_number_operand2(expr.operator, left, right)
-                return float(left) / float(right)
+                try:
+                    return float(left) / float(right)
+                except ZeroDivisionError:
+                    raise error.LoxRuntimeError(expr.operator, "Cannot divide by zero.")
             case TokenType.STAR:
                 check_number_operand2(expr.operator, left, right)
                 return float(left) * float(right)
