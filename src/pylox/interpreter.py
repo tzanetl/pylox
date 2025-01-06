@@ -54,8 +54,8 @@ class Interpreter(ExprVisitor):
             case TokenType.PLUS:
                 if isinstance(left, float) and isinstance(right, float):
                     return float(left) + float(right)
-                if isinstance(left, str) and isinstance(right, str):
-                    return str(left) + str(right)
+                if isinstance(left, str) or isinstance(right, str):
+                    return stringify(left) + stringify(right)
                 raise error.LoxRuntimeError(
                     expr.operator, "Operands must be two numbers or two strings."
                 )
