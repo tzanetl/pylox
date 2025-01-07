@@ -10,12 +10,10 @@ def run(source: str) -> None:
     scanner = Scanner(source)
     tokens = scanner.scan_tokens()
     parser = Parser(tokens)
-    expression = parser.parse()
+    statements = parser.parse()
 
     # Stop of there was a syntax error
     if HadError.had_error:
         return
 
-    assert expression is not None
-
-    INTERPRETER.interpret(expression)
+    INTERPRETER.interpret(statements)

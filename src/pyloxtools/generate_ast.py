@@ -24,11 +24,25 @@ def generate_ast(output_dir: Path) -> None:
         ],
     )
 
+    define_ast(
+        output_dir,
+        "Stmt",
+        [
+            "Expression : Expr expression",
+            "Print      : Expr expression",
+        ],
+    )
+
 
 def define_ast(output_dir: Path, base_name: str, types: list[str]) -> None:
     with open(output_dir.joinpath(f"{base_name.lower()}.py"), "w") as fs:
         file = WriteLn(fs)
-        define_imports(file)
+
+        if base_name.lower() == "expr":
+            define_imports_expr(file)
+        if base_name.lower() == "stmt":
+            define_imports_stmt(file)
+
         define_base_class(file, base_name)
 
         # AST classes
@@ -42,11 +56,18 @@ def define_ast(output_dir: Path, base_name: str, types: list[str]) -> None:
         define_visitor(file, base_name, types)
 
 
-def define_imports(file: WriteLn) -> None:
+def define_imports_expr(file: WriteLn) -> None:
     file.writeln("from abc import ABC, abstractmethod")
     file.writeln("from typing import Any")
     file.writeln("")
     file.writeln("from pylox.scanner import Token")
+    file.writeln("\n")
+
+
+def define_imports_stmt(file: WriteLn) -> None:
+    file.writeln("from abc import ABC, abstractmethod")
+    file.writeln("")
+    file.writeln("from pylox.expr import Expr")
     file.writeln("\n")
 
 

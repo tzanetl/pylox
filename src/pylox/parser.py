@@ -3,6 +3,7 @@ from typing import Any, Callable
 import pylox.error as error
 from pylox.expr import Binary, Conditional, Expr, Grouping, Literal, Unary
 from pylox.scanner import Token, TokenType
+from pylox.stmt import Expression, Print, Stmt
 
 
 def lasbo(
@@ -32,11 +33,11 @@ class Parser:
         self.tokens = tokens
         self.current = 0
 
-    def parse(self) -> Expr | None:
-        try:
-            return self.expression()
-        except error.ParseError:
-            return None
+    def parse(self) -> list[Stmt]:
+        statements = []
+        while not self.is_at_end():
+            statements.append(self.statement())
+        return statements
 
     def match(self, *types: TokenType) -> bool:
         """
@@ -56,7 +57,7 @@ class Parser:
         return self.peek().type == t
 
     def is_at_end(self) -> bool:
-        return self.peek() == TokenType.EOF
+        return self.peek().type == TokenType.EOF
 
     def advance(self) -> Token:
         """Consume current token"""
@@ -183,3 +184,18 @@ class Parser:
     @lasbo(conditional, TokenType.COMMA)
     def comma(self):
         pass
+
+    def statement(self) -> Stmt:
+        if self.match(TokenType.PRINT):
+            return self.print_statement()
+        return self.expression_statement()
+
+    def print_statement(self) -> Print:
+        value = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return Print(value)
+
+    def expression_statement(self) -> Expression:
+        expr = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return Expression(expr)

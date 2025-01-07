@@ -3,15 +3,19 @@ from typing import Any
 import pylox.error as error
 from pylox.expr import Binary, Conditional, Expr, ExprVisitor, Grouping, Literal, Unary
 from pylox.scanner import Token, TokenType
+from pylox.stmt import Expression, Print, Stmt, StmtVisitor
 
 
-class Interpreter(ExprVisitor):
-    def interpret(self, expr: Expr) -> None:
+class Interpreter(ExprVisitor, StmtVisitor):
+    def interpret(self, statements: list[Stmt]) -> None:
         try:
-            value = self.evaluate(expr)
-            print(stringify(value))
+            for stmt in statements:
+                self.execute(stmt)
         except error.LoxRuntimeError as exc:
             error.runtime_error(exc)
+
+    def execute(self, stmt: Stmt) -> None:
+        stmt.accept(self)
 
     def evaluate(self, expr: Expr) -> Any:
         return expr.accept(self)
@@ -88,6 +92,13 @@ class Interpreter(ExprVisitor):
         if is_truthy(condition):
             return self.evaluate(expr.if_true)
         return self.evaluate(expr.if_false)
+
+    def visit_expression_stmt(self, stmt: Expression) -> None:
+        self.evaluate(stmt.expression)
+
+    def visit_print_stmt(self, stmt: Print) -> None:
+        value = self.evaluate(stmt.expression)
+        print(stringify(value))
 
 
 def is_truthy(value: Any) -> bool:
