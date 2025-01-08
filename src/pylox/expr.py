@@ -70,6 +70,17 @@ class Conditional(Expr):
         return visitor.visit_conditional_expr(self)
 
 
+class Variable(Expr):
+    __slots___ = ("name",)
+
+    def __init__(self, name: Token) -> None:
+        super().__init__()
+        self.name = name
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_variable_expr(self)
+
+
 class ExprVisitor(ABC):
     @abstractmethod
     def visit_binary_expr(self, expr: Binary):  # noqa: U100
@@ -89,4 +100,8 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_conditional_expr(self, expr: Conditional):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_variable_expr(self, expr: Variable):  # noqa: U100
         raise NotImplementedError()

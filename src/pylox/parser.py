@@ -1,9 +1,9 @@
 from typing import Any, Callable
 
 import pylox.error as error
-from pylox.expr import Binary, Conditional, Expr, Grouping, Literal, Unary
+from pylox.expr import Binary, Conditional, Expr, Grouping, Literal, Unary, Variable
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Expression, Print, Stmt
+from pylox.stmt import Expression, Print, Stmt, Var
 
 
 def lasbo(
@@ -33,10 +33,10 @@ class Parser:
         self.tokens = tokens
         self.current = 0
 
-    def parse(self) -> list[Stmt]:
+    def parse(self) -> list[Stmt | None]:
         statements = []
         while not self.is_at_end():
-            statements.append(self.statement())
+            statements.append(self.declaration())
         return statements
 
     def match(self, *types: TokenType) -> bool:
@@ -115,6 +115,9 @@ class Parser:
 
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self.previous().literal)
+
+        if self.match(TokenType.IDENTIFIER):
+            return Variable(self.previous())
 
         if self.match(TokenType.LEFT_PAREN):
             expr = self.expression()
@@ -199,3 +202,22 @@ class Parser:
         expr = self.expression()
         self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
         return Expression(expr)
+
+    def declaration(self) -> Stmt | None:
+        try:
+            if self.match(TokenType.VAR):
+                return self.var_declaration()
+            return self.statement()
+        except error.ParseError:
+            self.synchronize()
+            return None
+
+    def var_declaration(self) -> Var:
+        name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
+
+        initializer = None
+        if self.match(TokenType.EQUAL):
+            initializer = self.expression()
+
+        self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
+        return Var(name, initializer)

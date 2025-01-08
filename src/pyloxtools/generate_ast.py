@@ -21,6 +21,7 @@ def generate_ast(output_dir: Path) -> None:
             "Literal     : Any value",
             "Unary       : Token operator, Expr right",
             "Conditional : Expr condition, Expr if_true, Expr if_false",
+            "Variable : Token name",
         ],
     )
 
@@ -30,6 +31,7 @@ def generate_ast(output_dir: Path) -> None:
         [
             "Expression : Expr expression",
             "Print      : Expr expression",
+            "Var        : Token name, Expr | None initializer",
         ],
     )
 
@@ -68,6 +70,7 @@ def define_imports_stmt(file: WriteLn) -> None:
     file.writeln("from abc import ABC, abstractmethod")
     file.writeln("")
     file.writeln("from pylox.expr import Expr")
+    file.writeln("from pylox.scanner import Token")
     file.writeln("\n")
 
 
@@ -81,7 +84,7 @@ def define_base_class(file: WriteLn, base_name: str) -> None:
 
 def define_type(file: WriteLn, base_name: str, class_name: str, fields: str) -> None:
     # (type, name)
-    variables = [tuple(i.split(" ")) for i in fields.split(", ")]
+    variables = [tuple(i.rsplit(" ", maxsplit=1)) for i in fields.split(", ")]
     file.writeln(f"class {class_name}({base_name}):")
     slots = ", ".join(f'"{var_name}"' for (_, var_name) in variables)
     if len(variables) == 1:
