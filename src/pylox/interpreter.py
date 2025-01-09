@@ -1,12 +1,17 @@
 from typing import Any
 
 import pylox.error as error
-from pylox.expr import Binary, Conditional, Expr, ExprVisitor, Grouping, Literal, Unary
+from pylox.environment import Environment
+from pylox.expr import Binary, Conditional, Expr, ExprVisitor, Grouping, Literal, Unary, Variable
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Expression, Print, Stmt, StmtVisitor
+from pylox.stmt import Expression, Print, Stmt, StmtVisitor, Var
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
+    def __init__(self) -> None:
+        super().__init__()
+        self.environment = Environment()
+
     def interpret(self, statements: list[Stmt]) -> None:
         try:
             for stmt in statements:
@@ -99,6 +104,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def visit_print_stmt(self, stmt: Print) -> None:
         value = self.evaluate(stmt.expression)
         print(stringify(value))
+
+    def visit_var_stmt(self, stmt: Var) -> None:
+        value = None
+        if stmt.initializer is not None:
+            value = self.evaluate(stmt.initializer)
+        self.environment.define(stmt.name.lexeme, value)
+
+    def visit_variable_expr(self, expr: Variable) -> Any:
+        return self.environment.get(expr.name)
 
 
 def is_truthy(value: Any) -> bool:
