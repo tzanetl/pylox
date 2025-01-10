@@ -2,7 +2,17 @@ from typing import Any
 
 import pylox.error as error
 from pylox.environment import Environment
-from pylox.expr import Binary, Conditional, Expr, ExprVisitor, Grouping, Literal, Unary, Variable
+from pylox.expr import (
+    Assign,
+    Binary,
+    Conditional,
+    Expr,
+    ExprVisitor,
+    Grouping,
+    Literal,
+    Unary,
+    Variable,
+)
 from pylox.scanner import Token, TokenType
 from pylox.stmt import Expression, Print, Stmt, StmtVisitor, Var
 
@@ -98,6 +108,14 @@ class Interpreter(ExprVisitor, StmtVisitor):
             return self.evaluate(expr.if_true)
         return self.evaluate(expr.if_false)
 
+    def visit_variable_expr(self, expr: Variable) -> Any:
+        return self.environment.get(expr.name)
+
+    def visit_assign_expr(self, expr: Assign) -> Any:
+        value = self.evaluate(expr.value)
+        self.environment.assign(expr.name, value)
+        return value
+
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self.evaluate(stmt.expression)
 
@@ -110,9 +128,6 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if stmt.initializer is not None:
             value = self.evaluate(stmt.initializer)
         self.environment.define(stmt.name.lexeme, value)
-
-    def visit_variable_expr(self, expr: Variable) -> Any:
-        return self.environment.get(expr.name)
 
 
 def is_truthy(value: Any) -> bool:

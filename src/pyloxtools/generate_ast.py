@@ -16,12 +16,13 @@ def generate_ast(output_dir: Path) -> None:
         output_dir,
         "Expr",
         [
+            "Assign      : Token name, Expr value",
             "Binary      : Expr left, Token operator, Expr right",
             "Grouping    : Expr expression",
             "Literal     : Any value",
             "Unary       : Token operator, Expr right",
             "Conditional : Expr condition, Expr if_true, Expr if_false",
-            "Variable : Token name",
+            "Variable    : Token name",
         ],
     )
 

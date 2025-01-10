@@ -1,7 +1,7 @@
 from typing import Any, Callable
 
 import pylox.error as error
-from pylox.expr import Binary, Conditional, Expr, Grouping, Literal, Unary, Variable
+from pylox.expr import Assign, Binary, Conditional, Expr, Grouping, Literal, Unary, Variable
 from pylox.scanner import Token, TokenType
 from pylox.stmt import Expression, Print, Stmt, Var
 
@@ -29,6 +29,33 @@ def lasbo(
 
 
 class Parser:
+    """
+    Expressions
+    -----------
+    expression      -> comma ;
+    comma           -> assignment ( "," assignment )* ;
+    assignment      -> IDENTIFIER "=" assignment
+                    | conditional ;
+    conditional     -> equality ( "?" expression ":" expression )? ;
+    equality        -> comparison ( ( "!=" | "==" ) comparison )* ;
+    comparison      -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+    term            -> factor ( ( "-" | "+" ) factor )* ;
+    factor          -> unary ( ( "/" | "*" ) unary )* ;
+    unary           -> ( "!" | "-" ) unary
+                    | primary ;
+    primary         -> NUMBER | STRING | "true" | "false" | "nil"
+                    | "(" expression ")" ;
+                    | IDENTIFIER ;
+
+    Statements
+    ----------
+    program         -> declaration* EOF ;
+    declaration     -> varDecl
+                    | statement ;
+    statement       -> exprStmt
+                    | printStmt ;
+    """
+
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
         self.current = 0
@@ -105,6 +132,20 @@ class Parser:
     def expression(self) -> Expr:
         return self.comma()
 
+    def assignment(self) -> Expr:
+        # Call instead of equality
+        expr = self.conditional()
+
+        if self.match(TokenType.EQUAL):
+            equals = self.previous()
+            value = self.assignment()
+            if isinstance(expr, Variable):
+                name = expr.name
+                return Assign(name, value)
+            self.error(equals, "Invalid assignment target.")
+
+        return expr
+
     def primary(self) -> Expr:
         if self.match(TokenType.FALSE):
             return Literal(False)
@@ -168,7 +209,6 @@ class Parser:
         pass
 
     # Chapter 6 challenge 2
-    # conditional -> equality ( "?" expression ":" expression )? ;
     def conditional(self) -> Expr:
         expr = self.equality()
 
@@ -183,8 +223,7 @@ class Parser:
         return expr
 
     # Chapter 6 challenge 1
-    # comma -> conditional ("," conditional)* ;
-    @lasbo(conditional, TokenType.COMMA)
+    @lasbo(assignment, TokenType.COMMA)
     def comma(self):
         pass
 

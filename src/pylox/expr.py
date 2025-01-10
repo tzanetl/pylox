@@ -10,6 +10,18 @@ class Expr(ABC):
         raise NotImplementedError()
 
 
+class Assign(Expr):
+    __slots___ = ("name", "value")
+
+    def __init__(self, name: Token, value: Expr) -> None:
+        super().__init__()
+        self.name = name
+        self.value = value
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_assign_expr(self)
+
+
 class Binary(Expr):
     __slots___ = ("left", "operator", "right")
 
@@ -82,6 +94,10 @@ class Variable(Expr):
 
 
 class ExprVisitor(ABC):
+    @abstractmethod
+    def visit_assign_expr(self, expr: Assign):  # noqa: U100
+        raise NotImplementedError()
+
     @abstractmethod
     def visit_binary_expr(self, expr: Binary):  # noqa: U100
         raise NotImplementedError()
