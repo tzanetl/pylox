@@ -11,6 +11,8 @@ class Stmt(ABC):
 
 
 class Expression(Stmt):
+    """Expression statement"""
+
     __slots___ = ("expression",)
 
     def __init__(self, expression: Expr) -> None:
@@ -22,6 +24,8 @@ class Expression(Stmt):
 
 
 class Print(Stmt):
+    """Print statement"""
+
     __slots___ = ("expression",)
 
     def __init__(self, expression: Expr) -> None:
@@ -33,6 +37,8 @@ class Print(Stmt):
 
 
 class Var(Stmt):
+    """Var statement"""
+
     __slots___ = ("name", "initializer")
 
     def __init__(self, name: Token, initializer: Expr | None) -> None:

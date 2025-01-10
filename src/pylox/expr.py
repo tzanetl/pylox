@@ -11,6 +11,8 @@ class Expr(ABC):
 
 
 class Assign(Expr):
+    """Assign expression"""
+
     __slots___ = ("name", "value")
 
     def __init__(self, name: Token, value: Expr) -> None:
@@ -23,6 +25,8 @@ class Assign(Expr):
 
 
 class Binary(Expr):
+    """Binary expression"""
+
     __slots___ = ("left", "operator", "right")
 
     def __init__(self, left: Expr, operator: Token, right: Expr) -> None:
@@ -36,6 +40,8 @@ class Binary(Expr):
 
 
 class Grouping(Expr):
+    """Grouping expression"""
+
     __slots___ = ("expression",)
 
     def __init__(self, expression: Expr) -> None:
@@ -47,6 +53,8 @@ class Grouping(Expr):
 
 
 class Literal(Expr):
+    """Literal expression"""
+
     __slots___ = ("value",)
 
     def __init__(self, value: Any) -> None:
@@ -58,6 +66,8 @@ class Literal(Expr):
 
 
 class Unary(Expr):
+    """Unary expression"""
+
     __slots___ = ("operator", "right")
 
     def __init__(self, operator: Token, right: Expr) -> None:
@@ -70,6 +80,8 @@ class Unary(Expr):
 
 
 class Conditional(Expr):
+    """Conditional expression"""
+
     __slots___ = ("condition", "if_true", "if_false")
 
     def __init__(self, condition: Expr, if_true: Expr, if_false: Expr) -> None:
@@ -83,6 +95,8 @@ class Conditional(Expr):
 
 
 class Variable(Expr):
+    """Variable expression"""
+
     __slots___ = ("name",)
 
     def __init__(self, name: Token) -> None:

@@ -24,6 +24,7 @@ def generate_ast(output_dir: Path) -> None:
             "Conditional : Expr condition, Expr if_true, Expr if_false",
             "Variable    : Token name",
         ],
+        "expression",
     )
 
     define_ast(
@@ -34,10 +35,11 @@ def generate_ast(output_dir: Path) -> None:
             "Print      : Expr expression",
             "Var        : Token name, Expr | None initializer",
         ],
+        "statement",
     )
 
 
-def define_ast(output_dir: Path, base_name: str, types: list[str]) -> None:
+def define_ast(output_dir: Path, base_name: str, types: list[str], doc_name: str) -> None:
     with open(output_dir.joinpath(f"{base_name.lower()}.py"), "w") as fs:
         file = WriteLn(fs)
 
@@ -52,7 +54,7 @@ def define_ast(output_dir: Path, base_name: str, types: list[str]) -> None:
         for t in types:
             file.writeln("")
             class_name, fields = map(lambda s: s.strip(), t.split(":"))
-            define_type(file, base_name, class_name, fields)
+            define_type(file, base_name, class_name, fields, doc_name)
             file.writeln("")
 
         file.writeln("")
@@ -83,10 +85,11 @@ def define_base_class(file: WriteLn, base_name: str) -> None:
     file.writeln("")
 
 
-def define_type(file: WriteLn, base_name: str, class_name: str, fields: str) -> None:
+def define_type(file: WriteLn, base_name: str, class_name: str, fields: str, doc_name: str) -> None:
     # (type, name)
     variables = [tuple(i.rsplit(" ", maxsplit=1)) for i in fields.split(", ")]
     file.writeln(f"class {class_name}({base_name}):")
+    file.writeln(f'    """{class_name} {doc_name}"""\n')
     slots = ", ".join(f'"{var_name}"' for (_, var_name) in variables)
     if len(variables) == 1:
         slots += ","
