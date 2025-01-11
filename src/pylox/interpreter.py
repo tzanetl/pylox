@@ -14,7 +14,7 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Expression, Print, Stmt, StmtVisitor, Var
+from pylox.stmt import Block, Expression, Print, Stmt, StmtVisitor, Var
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -31,6 +31,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def execute(self, stmt: Stmt) -> None:
         stmt.accept(self)
+
+    def execute_block(self, statements: list[Stmt], environment: Environment) -> None:
+        previous = self.environment
+        try:
+            self.environment = environment
+            for stmt in statements:
+                self.execute(stmt)
+        finally:
+            self.environment = previous
 
     def evaluate(self, expr: Expr) -> Any:
         return expr.accept(self)
@@ -128,6 +137,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         if stmt.initializer is not None:
             value = self.evaluate(stmt.initializer)
         self.environment.define(stmt.name.lexeme, value)
+
+    def visit_block_stmt(self, stmt: Block) -> None:
+        self.execute_block(stmt.statements, Environment(self.environment))
 
 
 def is_truthy(value: Any) -> bool:

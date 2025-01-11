@@ -3,7 +3,15 @@ from typing import Any, Callable
 import pylox.error as error
 from pylox.expr import Assign, Binary, Conditional, Expr, Grouping, Literal, Unary, Variable
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Expression, Print, Stmt, Var
+from pylox.stmt import Block, Expression, Print, Stmt, Var
+
+
+class InvalidDeclatation(Stmt):
+    """Statement returned on invalid variable declaration statement"""
+
+    def accept(self, _visitor: Any) -> None:  # noqa: U101
+        # This should never be visited
+        raise RuntimeError("cannot visit invalid declaration statement")
 
 
 def lasbo(
@@ -53,14 +61,16 @@ class Parser:
     declaration     -> varDecl
                     | statement ;
     statement       -> exprStmt
-                    | printStmt ;
+                    | printStmt
+                    | block ;
+    block           -> "{" declaration* "}" ;
     """
 
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
         self.current = 0
 
-    def parse(self) -> list[Stmt | None]:
+    def parse(self) -> list[Stmt]:
         statements = []
         while not self.is_at_end():
             statements.append(self.declaration())
@@ -230,6 +240,8 @@ class Parser:
     def statement(self) -> Stmt:
         if self.match(TokenType.PRINT):
             return self.print_statement()
+        if self.match(TokenType.LEFT_BRACE):
+            return Block(self.block())
         return self.expression_statement()
 
     def print_statement(self) -> Print:
@@ -242,14 +254,14 @@ class Parser:
         self.consume(TokenType.SEMICOLON, "Expect ';' after expression.")
         return Expression(expr)
 
-    def declaration(self) -> Stmt | None:
+    def declaration(self) -> Stmt:
         try:
             if self.match(TokenType.VAR):
                 return self.var_declaration()
             return self.statement()
         except error.ParseError:
             self.synchronize()
-            return None
+            return InvalidDeclatation()
 
     def var_declaration(self) -> Var:
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
@@ -260,3 +272,12 @@ class Parser:
 
         self.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
         return Var(name, initializer)
+
+    def block(self) -> list[Stmt]:
+        statements = []
+
+        while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end():
+            statements.append(self.declaration())
+
+        self.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.")
+        return statements

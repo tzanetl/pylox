@@ -31,6 +31,7 @@ def generate_ast(output_dir: Path) -> None:
         output_dir,
         "Stmt",
         [
+            "Block      : list[Stmt] statements",
             "Expression : Expr expression",
             "Print      : Expr expression",
             "Var        : Token name, Expr | None initializer",

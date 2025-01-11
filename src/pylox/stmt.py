@@ -10,6 +10,19 @@ class Stmt(ABC):
         raise NotImplementedError()
 
 
+class Block(Stmt):
+    """Block statement"""
+
+    __slots___ = ("statements",)
+
+    def __init__(self, statements: list[Stmt]) -> None:
+        super().__init__()
+        self.statements = statements
+
+    def accept(self, visitor: "StmtVisitor"):
+        return visitor.visit_block_stmt(self)
+
+
 class Expression(Stmt):
     """Expression statement"""
 
@@ -51,6 +64,10 @@ class Var(Stmt):
 
 
 class StmtVisitor(ABC):
+    @abstractmethod
+    def visit_block_stmt(self, stmt: Block):  # noqa: U100
+        raise NotImplementedError()
+
     @abstractmethod
     def visit_expression_stmt(self, stmt: Expression):  # noqa: U100
         raise NotImplementedError()
