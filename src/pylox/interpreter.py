@@ -18,9 +18,12 @@ from pylox.stmt import Block, Expression, Print, Stmt, StmtVisitor, Var
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
+    __slots__ = ("environment", "is_repl")
+
     def __init__(self) -> None:
         super().__init__()
         self.environment = Environment()
+        self.is_repl = False
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -126,7 +129,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
         return value
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
-        self.evaluate(stmt.expression)
+        value = self.evaluate(stmt.expression)
+        # Chapter 8 challenge 1
+        if self.is_repl:
+            print(stringify(value))
 
     def visit_print_stmt(self, stmt: Print) -> None:
         value = self.evaluate(stmt.expression)

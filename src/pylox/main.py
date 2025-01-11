@@ -6,7 +6,7 @@ from pathlib import Path
 import pylox.version
 
 from .error import HadError
-from .lox import run
+from .lox import INTERPRETER, run
 
 type path_like = str | bytes | os.PathLike
 
@@ -23,6 +23,8 @@ def run_file(path: path_like):
 
 
 def run_prompt():
+    INTERPRETER.is_repl = True
+
     while True:
         try:
             line = input("> ")
