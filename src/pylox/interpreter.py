@@ -17,6 +17,13 @@ from pylox.scanner import Token, TokenType
 from pylox.stmt import Block, Expression, Print, Stmt, StmtVisitor, Var
 
 
+class Unassigned:
+    """Type for unassigned variables"""
+
+
+UNASSIGNED = Unassigned()
+
+
 class Interpreter(ExprVisitor, StmtVisitor):
     __slots__ = ("environment", "is_repl")
 
@@ -121,7 +128,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         return self.evaluate(expr.if_false)
 
     def visit_variable_expr(self, expr: Variable) -> Any:
-        return self.environment.get(expr.name)
+        value = self.environment.get(expr.name)
+        if value is UNASSIGNED:
+            raise error.LoxRuntimeError(expr.name, f"Variable '{expr.name.lexeme}' is unassigned.")
 
     def visit_assign_expr(self, expr: Assign) -> Any:
         value = self.evaluate(expr.value)
@@ -139,7 +148,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         print(stringify(value))
 
     def visit_var_stmt(self, stmt: Var) -> None:
-        value = None
+        value = UNASSIGNED
         if stmt.initializer is not None:
             value = self.evaluate(stmt.initializer)
         self.environment.define(stmt.name.lexeme, value)
