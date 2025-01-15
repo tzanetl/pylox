@@ -33,6 +33,7 @@ def generate_ast(output_dir: Path) -> None:
         [
             "Block      : list[Stmt] statements",
             "Expression : Expr expression",
+            "If         : Expr condition, Stmt then_branch, Stmt | None else_branch",
             "Print      : Expr expression",
             "Var        : Token name, Expr | None initializer",
         ],

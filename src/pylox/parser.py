@@ -3,7 +3,7 @@ from typing import Any, Callable
 import pylox.error as error
 from pylox.expr import Assign, Binary, Conditional, Expr, Grouping, Literal, Unary, Variable
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Expression, Print, Stmt, Var
+from pylox.stmt import Block, Expression, If, Print, Stmt, Var
 
 
 class InvalidDeclatation(Stmt):
@@ -60,9 +60,14 @@ class Parser:
     program         -> declaration* EOF ;
     declaration     -> varDecl
                     | statement ;
+    varDecl         -> "var" IDENTIFIER ( "=" expression )? ";" ;
     statement       -> exprStmt
+                    | ifStmt
                     | printStmt
                     | block ;
+    exprStmt        -> expression ";" ;
+    printStmt       -> "print" expression ";" ;
+    ifStmt          -> "if" "(" expression ")" statement ( "else" statement )? ;
     block           -> "{" declaration* "}" ;
     """
 
@@ -238,6 +243,8 @@ class Parser:
         pass
 
     def statement(self) -> Stmt:
+        if self.match(TokenType.IF):
+            return self.if_statement()
         if self.match(TokenType.PRINT):
             return self.print_statement()
         if self.match(TokenType.LEFT_BRACE):
@@ -281,3 +288,13 @@ class Parser:
 
         self.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.")
         return statements
+
+    def if_statement(self) -> If:
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
+        condition = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.")
+        then_branch = self.statement()
+        else_branch = None
+        if self.match(TokenType.ELSE):
+            else_branch = self.statement()
+        return If(condition, then_branch, else_branch)

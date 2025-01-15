@@ -36,6 +36,21 @@ class Expression(Stmt):
         return visitor.visit_expression_stmt(self)
 
 
+class If(Stmt):
+    """If statement"""
+
+    __slots___ = ("condition", "then_branch", "else_branch")
+
+    def __init__(self, condition: Expr, then_branch: Stmt, else_branch: Stmt | None) -> None:
+        super().__init__()
+        self.condition = condition
+        self.then_branch = then_branch
+        self.else_branch = else_branch
+
+    def accept(self, visitor: "StmtVisitor"):
+        return visitor.visit_if_stmt(self)
+
+
 class Print(Stmt):
     """Print statement"""
 
@@ -70,6 +85,10 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_expression_stmt(self, stmt: Expression):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_if_stmt(self, stmt: If):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod

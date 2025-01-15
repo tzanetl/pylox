@@ -14,7 +14,7 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Expression, Print, Stmt, StmtVisitor, Var
+from pylox.stmt import Block, Expression, If, Print, Stmt, StmtVisitor, Var
 
 
 class Unassigned:
@@ -156,6 +156,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_block_stmt(self, stmt: Block) -> None:
         self.execute_block(stmt.statements, Environment(self.environment))
+
+    def visit_if_stmt(self, stmt: If) -> None:
+        if is_truthy(self.evaluate(stmt.condition)):
+            self.execute(stmt.then_branch)
+        elif stmt.else_branch is not None:
+            self.execute(stmt.else_branch)
 
 
 def is_truthy(value: Any) -> bool:
