@@ -131,6 +131,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         value = self.environment.get(expr.name)
         if value is UNASSIGNED:
             raise error.LoxRuntimeError(expr.name, f"Variable '{expr.name.lexeme}' is unassigned.")
+        return value
 
     def visit_assign_expr(self, expr: Assign) -> Any:
         value = self.evaluate(expr.value)
