@@ -20,6 +20,7 @@ def generate_ast(output_dir: Path) -> None:
             "Binary      : Expr left, Token operator, Expr right",
             "Grouping    : Expr expression",
             "Literal     : Any value",
+            "Logical     : Expr left, Token operator, Expr right",
             "Unary       : Token operator, Expr right",
             "Conditional : Expr condition, Expr if_true, Expr if_false",
             "Variable    : Token name",

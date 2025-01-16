@@ -65,6 +65,21 @@ class Literal(Expr):
         return visitor.visit_literal_expr(self)
 
 
+class Logical(Expr):
+    """Logical expression"""
+
+    __slots___ = ("left", "operator", "right")
+
+    def __init__(self, left: Expr, operator: Token, right: Expr) -> None:
+        super().__init__()
+        self.left = left
+        self.operator = operator
+        self.right = right
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_logical_expr(self)
+
+
 class Unary(Expr):
     """Unary expression"""
 
@@ -122,6 +137,10 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_literal_expr(self, expr: Literal):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_logical_expr(self, expr: Logical):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod

@@ -10,6 +10,7 @@ from pylox.expr import (
     ExprVisitor,
     Grouping,
     Literal,
+    Logical,
     Unary,
     Variable,
 )
@@ -137,6 +138,18 @@ class Interpreter(ExprVisitor, StmtVisitor):
         value = self.evaluate(expr.value)
         self.environment.assign(expr.name, value)
         return value
+
+    def visit_logical_expr(self, expr: Logical) -> Any:
+        left = self.evaluate(expr.left)
+
+        if expr.operator.type == TokenType.OR:
+            if is_truthy(left):
+                return left
+        else:
+            if not is_truthy(left):
+                return left
+
+        return self.evaluate(expr.right)
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         value = self.evaluate(stmt.expression)

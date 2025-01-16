@@ -1,7 +1,17 @@
 from typing import Any, Callable
 
 import pylox.error as error
-from pylox.expr import Assign, Binary, Conditional, Expr, Grouping, Literal, Unary, Variable
+from pylox.expr import (
+    Assign,
+    Binary,
+    Conditional,
+    Expr,
+    Grouping,
+    Literal,
+    Logical,
+    Unary,
+    Variable,
+)
 from pylox.scanner import Token, TokenType
 from pylox.stmt import Block, Expression, If, Print, Stmt, Var
 
@@ -43,7 +53,9 @@ class Parser:
     expression      -> comma ;
     comma           -> assignment ( "," assignment )* ;
     assignment      -> IDENTIFIER "=" assignment
-                    | conditional ;
+                    | logic_or ;
+    logic_or        -> logic_and ( "or" logic_and )* ;
+    logic_and       -> conditional ( "and" conditional )* ;
     conditional     -> equality ( "?" expression ":" expression )? ;
     equality        -> comparison ( ( "!=" | "==" ) comparison )* ;
     comparison      -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -148,8 +160,7 @@ class Parser:
         return self.comma()
 
     def assignment(self) -> Expr:
-        # Call instead of equality
-        expr = self.conditional()
+        expr = self.or_expression()
 
         if self.match(TokenType.EQUAL):
             equals = self.previous()
@@ -298,3 +309,24 @@ class Parser:
         if self.match(TokenType.ELSE):
             else_branch = self.statement()
         return If(condition, then_branch, else_branch)
+
+    def or_expression(self) -> Expr:
+        expr = self.and_expression()
+
+        while self.match(TokenType.OR):
+            operator = self.previous()
+            right = self.and_expression()
+            expr = Logical(expr, operator, right)
+
+        return expr
+
+    def and_expression(self) -> Expr:
+        # Instead of equality
+        expr = self.conditional()
+
+        while self.match(TokenType.AND):
+            operator = self.previous()
+            right = self.conditional()
+            expr = Logical(expr, operator, right)
+
+        return expr
