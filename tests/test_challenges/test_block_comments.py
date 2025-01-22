@@ -1,5 +1,3 @@
-import textwrap
-
 from pylox.main import run
 
 
@@ -8,14 +6,10 @@ def test_block_comments(capsys):
         /* this is a
         multiline
         comment */
-        1
-    """
-    correct = """\
-        TokenType.NUMBER 1 1.0
-        TokenType.EOF  None
+        print 1;
     """
     run(source)
-    assert capsys.readouterr()[0] == textwrap.dedent(correct)
+    assert capsys.readouterr()[0] == "1\n"
 
 
 def test_block_comments_error(capsys):
@@ -23,7 +17,7 @@ def test_block_comments_error(capsys):
         /* this is a
         multiline
         comment *
-        1
+        1;
     """
     run(source)
     assert capsys.readouterr()[1].startswith("[line 1] Error: Unexpected character.")
