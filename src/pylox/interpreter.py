@@ -15,7 +15,7 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Expression, If, Print, Stmt, StmtVisitor, Var
+from pylox.stmt import Block, Expression, If, Print, Stmt, StmtVisitor, Var, While
 
 
 class Unassigned:
@@ -175,6 +175,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
             self.execute(stmt.then_branch)
         elif stmt.else_branch is not None:
             self.execute(stmt.else_branch)
+
+    def visit_while_stmt(self, stmt: While) -> None:
+        while is_truthy(self.evaluate(stmt.condition)):
+            self.execute(stmt.body)
 
 
 def is_truthy(value: Any) -> bool:

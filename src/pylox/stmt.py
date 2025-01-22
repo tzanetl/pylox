@@ -78,6 +78,20 @@ class Var(Stmt):
         return visitor.visit_var_stmt(self)
 
 
+class While(Stmt):
+    """While statement"""
+
+    __slots___ = ("condition", "body")
+
+    def __init__(self, condition: Expr, body: Stmt) -> None:
+        super().__init__()
+        self.condition = condition
+        self.body = body
+
+    def accept(self, visitor: "StmtVisitor"):
+        return visitor.visit_while_stmt(self)
+
+
 class StmtVisitor(ABC):
     @abstractmethod
     def visit_block_stmt(self, stmt: Block):  # noqa: U100
@@ -97,4 +111,8 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_var_stmt(self, stmt: Var):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_while_stmt(self, stmt: While):  # noqa: U100
         raise NotImplementedError()
