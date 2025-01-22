@@ -74,6 +74,7 @@ class Parser:
                     | statement ;
     varDecl         -> "var" IDENTIFIER ( "=" expression )? ";" ;
     statement       -> exprStmt
+                    | forStmt
                     | ifStmt
                     | printStmt
                     | whileStmt
@@ -82,6 +83,8 @@ class Parser:
     ifStmt          -> "if" "(" expression ")" statement ( "else" statement )? ;
     printStmt       -> "print" expression ";" ;
     whileStmt       -> "while" "(" expression ")" statement ;
+    forStmt         -> "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")"
+                    statement ;
     block           -> "{" declaration* "}" ;
     """
 
@@ -256,6 +259,8 @@ class Parser:
         pass
 
     def statement(self) -> Stmt:
+        if self.match(TokenType.FOR):
+            return self.for_statement()
         if self.match(TokenType.IF):
             return self.if_statement()
         if self.match(TokenType.PRINT):
@@ -270,6 +275,41 @@ class Parser:
         value = self.expression()
         self.consume(TokenType.SEMICOLON, "Expect ';' after value.")
         return Print(value)
+
+    def for_statement(self) -> Stmt:
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.")
+
+        initializer: Stmt | None
+        if self.match(TokenType.SEMICOLON):
+            initializer = None
+        elif self.match(TokenType.VAR):
+            initializer = self.var_declaration()
+        else:
+            initializer = self.expression_statement()
+
+        condition = None
+        if not self.check(TokenType.SEMICOLON):
+            condition = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.")
+
+        increment = None
+        if not self.check(TokenType.RIGHT_PAREN):
+            increment = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.")
+
+        body = self.statement()
+
+        if increment is not None:
+            body = Block([body, Expression(increment)])
+
+        if condition is None:
+            condition = Literal(True)
+        body = While(condition, body)
+
+        if initializer is not None:
+            body = Block([initializer, body])
+
+        return body
 
     def while_statement(self) -> While:
         self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.")
