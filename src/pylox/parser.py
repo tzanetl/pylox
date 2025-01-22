@@ -13,7 +13,7 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Expression, If, Print, Stmt, Var, While
+from pylox.stmt import Block, Break, Expression, If, Print, Stmt, Var, While
 
 
 class InvalidDeclatation(Stmt):
@@ -78,6 +78,7 @@ class Parser:
                     | ifStmt
                     | printStmt
                     | whileStmt
+                    | breakStmt
                     | block ;
     exprStmt        -> expression ";" ;
     ifStmt          -> "if" "(" expression ")" statement ( "else" statement )? ;
@@ -91,6 +92,7 @@ class Parser:
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
         self.current = 0
+        self.loop_depth = 0
 
     def parse(self) -> list[Stmt]:
         statements = []
@@ -267,6 +269,8 @@ class Parser:
             return self.print_statement()
         if self.match(TokenType.WHILE):
             return self.while_statement()
+        if self.match(TokenType.BREAK):
+            return self.break_statement()
         if self.match(TokenType.LEFT_BRACE):
             return Block(self.block())
         return self.expression_statement()
@@ -297,7 +301,9 @@ class Parser:
             increment = self.expression()
         self.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.")
 
+        self.loop_depth += 1
         body = self.statement()
+        self.loop_depth -= 1
 
         if increment is not None:
             body = Block([body, Expression(increment)])
@@ -315,8 +321,16 @@ class Parser:
         self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.")
         condition = self.expression()
         self.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.")
+        self.loop_depth += 1
         body = self.statement()
+        self.loop_depth -= 1
         return While(condition, body)
+
+    def break_statement(self) -> Break:
+        if self.loop_depth == 0:
+            self.error(self.previous(), "Must be inside a loop to use 'break'.")
+        self.consume(TokenType.SEMICOLON, "Expected ';' after 'break'.")
+        return Break()
 
     def expression_statement(self) -> Expression:
         expr = self.expression()

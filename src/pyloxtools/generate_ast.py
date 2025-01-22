@@ -33,6 +33,7 @@ def generate_ast(output_dir: Path) -> None:
         "Stmt",
         [
             "Block      : list[Stmt] statements",
+            "Break      :",
             "Expression : Expr expression",
             "If         : Expr condition, Stmt then_branch, Stmt | None else_branch",
             "Print      : Expr expression",
@@ -92,16 +93,28 @@ def define_base_class(file: WriteLn, base_name: str) -> None:
 def define_type(file: WriteLn, base_name: str, class_name: str, fields: str, doc_name: str) -> None:
     # (type, name)
     variables = [tuple(i.rsplit(" ", maxsplit=1)) for i in fields.split(", ")]
+    if not fields:
+        variables = []
+
     file.writeln(f"class {class_name}({base_name}):")
     file.writeln(f'    """{class_name} {doc_name}"""\n')
-    slots = ", ".join(f'"{var_name}"' for (_, var_name) in variables)
+
+    if not variables:
+        slots = ""
+    else:
+        slots = ", ".join(f'"{var_name}"' for (_, var_name) in variables)
     if len(variables) == 1:
         slots += ","
     file.writeln(f"    __slots___ = ({slots})")
     file.writeln("")
-    init_header = ", ".join(f"{va_name}: {var_type}" for (var_type, va_name) in variables)
-    file.writeln(f"    def __init__(self, {init_header}) -> None:")
+
+    if not variables:
+        file.writeln("    def __init__(self) -> None:")
+    else:
+        init_header = ", ".join(f"{va_name}: {var_type}" for (var_type, va_name) in variables)
+        file.writeln(f"    def __init__(self, {init_header}) -> None:")
     file.writeln("        super().__init__()")
+
     # Fields
     for _, i_n in variables:
         file.writeln(f"        self.{i_n} = {i_n}")

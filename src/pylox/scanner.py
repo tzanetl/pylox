@@ -53,6 +53,7 @@ class TokenType(Enum):
     TRUE = auto()
     VAR = auto()
     WHILE = auto()
+    BREAK = auto()
 
     EOF = auto()
 
@@ -74,6 +75,7 @@ KEYWORDS: dict[str, TokenType] = {
     "true": TokenType.TRUE,
     "var": TokenType.VAR,
     "while": TokenType.WHILE,
+    "break": TokenType.BREAK,
 }
 
 
@@ -87,7 +89,7 @@ class Token:
         self.line = line
 
     def __str__(self) -> str:
-        return f"{self.type} {self.lexeme} {self.literal}"
+        return f"{self.type} {self.lexeme} {self.literal} {self.line}"
 
     def __repr__(self) -> str:
         return str(self)

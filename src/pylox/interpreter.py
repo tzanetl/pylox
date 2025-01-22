@@ -15,7 +15,7 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Expression, If, Print, Stmt, StmtVisitor, Var, While
+from pylox.stmt import Block, Break, Expression, If, Print, Stmt, StmtVisitor, Var, While
 
 
 class Unassigned:
@@ -178,7 +178,13 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_while_stmt(self, stmt: While) -> None:
         while is_truthy(self.evaluate(stmt.condition)):
-            self.execute(stmt.body)
+            try:
+                self.execute(stmt.body)
+            except error.BreakWhileError:
+                break
+
+    def visit_break_stmt(self, _stmt: Break) -> None:  # noqa: U101
+        raise error.BreakWhileError()
 
 
 def is_truthy(value: Any) -> bool:

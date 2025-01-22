@@ -18,6 +18,10 @@ class LoxRuntimeError(PyloxError):
         self.token = token
 
 
+class BreakWhileError(PyloxError):
+    """Raised to break out of while loops"""
+
+
 class HadError:
     had_error = False
     had_runtime_error = False
