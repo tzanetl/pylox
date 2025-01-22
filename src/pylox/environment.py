@@ -27,4 +27,8 @@ class Environment:
         if name.lexeme in self.values:
             self.values[name.lexeme] = value
             return
+
+        if self.enclosing is not None:
+            return self.enclosing.assign(name, value)
+
         raise error.LoxRuntimeError(name, f"Undefined variable '{name.lexeme}'.")
