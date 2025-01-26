@@ -39,6 +39,21 @@ class Binary(Expr):
         return visitor.visit_binary_expr(self)
 
 
+class Call(Expr):
+    """Call expression"""
+
+    __slots___ = ("callee", "paren", "arguments")
+
+    def __init__(self, callee: Expr, paren: Token, arguments: list[Expr]) -> None:
+        super().__init__()
+        self.callee = callee
+        self.paren = paren
+        self.arguments = arguments
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_call_expr(self)
+
+
 class Grouping(Expr):
     """Grouping expression"""
 
@@ -129,6 +144,10 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_binary_expr(self, expr: Binary):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_call_expr(self, expr: Call):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod

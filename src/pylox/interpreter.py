@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import Any
 
 import pylox.error as error
@@ -5,6 +6,7 @@ from pylox.environment import Environment
 from pylox.expr import (
     Assign,
     Binary,
+    Call,
     Conditional,
     Expr,
     ExprVisitor,
@@ -23,6 +25,16 @@ class Unassigned:
 
 
 UNASSIGNED = Unassigned()
+
+
+class LoxCallable(ABC):
+    @abstractmethod
+    def call(self, interpreter: "Interpreter", arguments: list) -> Any:  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def arity(self) -> int:
+        raise NotImplementedError()
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -150,6 +162,17 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 return left
 
         return self.evaluate(expr.right)
+
+    def visit_call_expr(self, expr: Call) -> Any:
+        callee = self.evaluate(expr.callee)
+        arguments = [self.evaluate(arg) for arg in expr.arguments]
+        if not isinstance(callee, LoxCallable):
+            raise error.LoxRuntimeError(expr.paren, "Can only call functions and classes.")
+        if len(arguments) != callee.arity():
+            raise error.LoxRuntimeError(
+                expr.paren, f"Expected {callee.arity()} but got {len(arguments)}."
+            )
+        return callee.call(self, arguments)
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         value = self.evaluate(stmt.expression)

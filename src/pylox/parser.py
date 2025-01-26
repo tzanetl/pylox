@@ -4,6 +4,7 @@ import pylox.error as error
 from pylox.expr import (
     Assign,
     Binary,
+    Call,
     Conditional,
     Expr,
     Grouping,
@@ -61,8 +62,9 @@ class Parser:
     comparison      -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
     term            -> factor ( ( "-" | "+" ) factor )* ;
     factor          -> unary ( ( "/" | "*" ) unary )* ;
-    unary           -> ( "!" | "-" ) unary
-                    | primary ;
+    unary           -> ( "!" | "-" ) unary | call ;
+    call            -> primary ( "(" arguments? ")" )* ;
+    arguments       -> expression ( "," expression )* ;
     primary         -> NUMBER | STRING | "true" | "false" | "nil"
                     | "(" expression ")" ;
                     | IDENTIFIER ;
@@ -218,12 +220,37 @@ class Parser:
 
         raise self.error(self.peek(), "Expected expression.")
 
+    def finish_call(self, callee: Expr) -> Call:
+        arguments: list[Expr] = []
+        if not self.check(TokenType.RIGHT_PAREN):
+            while True:
+                if len(arguments) >= 255:
+                    self.error(self.peek(), "Can't have more than 255 arguments.")
+
+                arguments.append(self.expression())
+
+                if not self.match(TokenType.COMMA):
+                    break
+        paren = self.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
+        return Call(callee, paren, arguments)
+
+    def call(self) -> Expr:
+        expr = self.primary()
+
+        while True:
+            if self.match(TokenType.LEFT_PAREN):
+                expr = self.finish_call(expr)
+            else:
+                break
+
+        return expr
+
     def unary(self) -> Expr:
         if self.match(TokenType.BANG, TokenType.MINUS):
             operator = self.previous()
             right = self.unary()
             return Unary(operator, right)
-        return self.primary()
+        return self.call()
 
     @lasbo(unary, TokenType.STAR, TokenType.SLASH)
     def factor(self):
