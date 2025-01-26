@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -28,22 +29,36 @@ UNASSIGNED = Unassigned()
 
 
 class LoxCallable(ABC):
+    __slots__ = ("arity",)
+
+    def __init__(self, arity: int) -> None:
+        self.arity = arity
+
     @abstractmethod
     def call(self, interpreter: "Interpreter", arguments: list) -> Any:  # noqa: U100
         raise NotImplementedError()
 
-    @abstractmethod
-    def arity(self) -> int:
-        raise NotImplementedError()
+
+# Builtin functions
+class Clock(LoxCallable):
+    def __str__(self) -> str:
+        return "<native fn>"
+
+    def call(self, interpreter: "Interpreter", arguments: list) -> float:  # noqa: U100
+        return time.time()
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
-    __slots__ = ("environment", "is_repl")
+    __slots__ = ("environment", "is_repl", "globals")
 
     def __init__(self) -> None:
         super().__init__()
-        self.environment = Environment()
+        self.globals = Environment()
+        self.environment = self.globals
         self.is_repl = False
+
+        # Builtin functions
+        self.globals.define("clock", Clock(0))
 
     def interpret(self, statements: list[Stmt]) -> None:
         try:
@@ -168,9 +183,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         arguments = [self.evaluate(arg) for arg in expr.arguments]
         if not isinstance(callee, LoxCallable):
             raise error.LoxRuntimeError(expr.paren, "Can only call functions and classes.")
-        if len(arguments) != callee.arity():
+        if len(arguments) != callee.arity:
             raise error.LoxRuntimeError(
-                expr.paren, f"Expected {callee.arity()} but got {len(arguments)}."
+                expr.paren, f"Expected {callee.arity} but got {len(arguments)}."
             )
         return callee.call(self, arguments)
 
