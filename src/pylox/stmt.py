@@ -48,6 +48,21 @@ class Expression(Stmt):
         return visitor.visit_expression_stmt(self)
 
 
+class Function(Stmt):
+    """Function statement"""
+
+    __slots___ = ("name", "params", "body")
+
+    def __init__(self, name: Token, params: list[Token], body: list[Stmt]) -> None:
+        super().__init__()
+        self.name = name
+        self.params = params
+        self.body = body
+
+    def accept(self, visitor: "StmtVisitor"):
+        return visitor.visit_function_stmt(self)
+
+
 class If(Stmt):
     """If statement"""
 
@@ -115,6 +130,10 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_expression_stmt(self, stmt: Expression):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_function_stmt(self, stmt: Function):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod

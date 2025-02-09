@@ -1,3 +1,4 @@
+import enum
 from typing import Any, Callable
 
 import pylox.error as error
@@ -14,7 +15,7 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Break, Expression, If, Print, Stmt, Var, While
+from pylox.stmt import Block, Break, Expression, Function, If, Print, Stmt, Var, While
 
 
 class InvalidDeclatation(Stmt):
@@ -23,6 +24,10 @@ class InvalidDeclatation(Stmt):
     def accept(self, _visitor: Any) -> None:  # noqa: U101
         # This should never be visited
         raise RuntimeError("cannot visit invalid declaration statement")
+
+
+class FunctionKind(enum.StrEnum):
+    FUNCTION = enum.auto()
 
 
 def lasbo(
@@ -72,8 +77,12 @@ class Parser:
     Statements
     ----------
     program         -> declaration* EOF ;
-    declaration     -> varDecl
+    declaration     -> funDecl
+                    | varDecl
                     | statement ;
+    funDecl         -> "fun" function ;
+    function        -> IDENTIFIER "(" parameters? ")" block ;
+    parameters      -> IDENTIFIER ( "," IDENTIFIER )* ;
     varDecl         -> "var" IDENTIFIER ( "=" expression )? ";" ;
     statement       -> exprStmt
                     | forStmt
@@ -366,12 +375,31 @@ class Parser:
 
     def declaration(self) -> Stmt:
         try:
+            if self.match(TokenType.FUN):
+                return self.function(FunctionKind.FUNCTION)
             if self.match(TokenType.VAR):
                 return self.var_declaration()
             return self.statement()
         except error.ParseError:
             self.synchronize()
             return InvalidDeclatation()
+
+    def function(self, kind: FunctionKind) -> Function:
+        name = self.consume(TokenType.IDENTIFIER, f"Expect {kind} name.")
+
+        parameters: list[Token] = []
+        if not self.check(TokenType.RIGHT_PAREN):
+            while True:
+                if len(parameters) >= 255:
+                    self.error(self.peek(), "Can't have more than 255 parameters.")
+                parameters.append(self.consume(TokenType.IDENTIFIER, "Expected parameter name."))
+                if not self.match(TokenType.COMMA):
+                    break
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
+
+        self.consume(TokenType.LEFT_BRACE, f"Expect '{{' before {kind} body.")
+        body = self.block()
+        return Function(name, parameters, body)
 
     def var_declaration(self) -> Var:
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
