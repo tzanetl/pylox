@@ -18,7 +18,7 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Break, Expression, If, Print, Stmt, StmtVisitor, Var, While
+from pylox.stmt import Block, Break, Expression, Function, If, Print, Stmt, StmtVisitor, Var, While
 
 
 class Unassigned:
@@ -37,6 +37,30 @@ class LoxCallable(ABC):
     @abstractmethod
     def call(self, interpreter: "Interpreter", arguments: list) -> Any:  # noqa: U100
         raise NotImplementedError()
+
+
+class LoxFunction(LoxCallable):
+    __slots__ = ("declaration",)
+
+    def __init__(self, declaration: Function) -> None:
+        self.declaration = declaration
+
+    def __str__(self) -> str:
+        return f"<fn {self.declaration.name.lexeme}>"
+
+    @property
+    def arity(self) -> int:
+        return len(self.declaration.params)
+
+    @arity.setter
+    def arity(self) -> None:
+        raise NotImplementedError("unreachable")
+
+    def call(self, interpreter: "Interpreter", arguments: list) -> Any:
+        environment = Environment(interpreter.globals)
+        for param, arg in zip(self.declaration.params, arguments):
+            environment.define(param.lexeme, arg)
+        interpreter.execute_block(self.declaration.body, environment)
 
 
 # Builtin functions
@@ -223,6 +247,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_break_stmt(self, _stmt: Break) -> None:  # noqa: U101
         raise error.BreakWhileError()
+
+    def visit_function_stmt(self, stmt: Function) -> None:
+        func = LoxFunction(stmt)
+        self.environment.define(stmt.name.lexeme, func)
 
 
 def is_truthy(value: Any) -> bool:
