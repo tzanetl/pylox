@@ -69,7 +69,7 @@ class Parser:
     factor          -> unary ( ( "/" | "*" ) unary )* ;
     unary           -> ( "!" | "-" ) unary | call ;
     call            -> primary ( "(" arguments? ")" )* ;
-    arguments       -> expression ( "," expression )* ;
+    arguments       -> equality ( "," equality )* ;
     primary         -> NUMBER | STRING | "true" | "false" | "nil"
                     | "(" expression ")" ;
                     | IDENTIFIER ;
@@ -236,7 +236,8 @@ class Parser:
                 if len(arguments) >= 255:
                     self.error(self.peek(), "Can't have more than 255 arguments.")
 
-                arguments.append(self.expression())
+                # https://github.com/munificent/craftinginterpreters/issues/263#issuecomment-412353276
+                arguments.append(self.equality())
 
                 if not self.match(TokenType.COMMA):
                     break
