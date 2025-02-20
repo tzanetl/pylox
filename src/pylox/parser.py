@@ -386,6 +386,7 @@ class Parser:
 
     def function(self, kind: FunctionKind) -> Function:
         name = self.consume(TokenType.IDENTIFIER, f"Expect {kind} name.")
+        self.consume(TokenType.LEFT_PAREN, f"Expect '(' after {kind} name.")
 
         parameters: list[Token] = []
         if not self.check(TokenType.RIGHT_PAREN):
