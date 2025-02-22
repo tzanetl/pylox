@@ -52,10 +52,11 @@ class LoxCallable(ABC):
 
 
 class LoxFunction(LoxCallable):
-    __slots__ = ("declaration",)
+    __slots__ = ("declaration", "closure")
 
-    def __init__(self, declaration: Function) -> None:
+    def __init__(self, declaration: Function, closure: Environment) -> None:
         self.declaration = declaration
+        self.closure = closure
 
     def __str__(self) -> str:
         return f"<fn {self.declaration.name.lexeme}>"
@@ -69,7 +70,7 @@ class LoxFunction(LoxCallable):
         raise NotImplementedError("unreachable")
 
     def call(self, interpreter: "Interpreter", arguments: list) -> Any:
-        environment = Environment(interpreter.globals)
+        environment = Environment(self.closure)
         for param, arg in zip(self.declaration.params, arguments):
             environment.define(param.lexeme, arg)
 
@@ -265,7 +266,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         raise error.BreakWhileError()
 
     def visit_function_stmt(self, stmt: Function) -> None:
-        func = LoxFunction(stmt)
+        func = LoxFunction(stmt, self.environment)
         self.environment.define(stmt.name.lexeme, func)
 
     def visit_return_stmt(self, stmt: Return) -> None:
