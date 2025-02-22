@@ -1,5 +1,5 @@
 import sys
-from typing import overload
+from typing import Any, overload
 
 import pylox.scanner as scanner
 
@@ -13,6 +13,8 @@ class ParseError(PyloxError):
 
 
 class LoxRuntimeError(PyloxError):
+    __slots__ = ("token",)
+
     def __init__(self, token: scanner.Token, message: str) -> None:
         super().__init__(message)
         self.token = token
@@ -20,6 +22,17 @@ class LoxRuntimeError(PyloxError):
 
 class BreakWhileError(PyloxError):
     """Raised to break out of while loops"""
+
+
+# Inherit from instead of LoxRuntimeError, because this felt more appropriate
+# https://craftinginterpreters.com/functions.html#returning-from-calls
+class ReturnError(PyloxError):
+    """Raised to return from function"""
+
+    __slots__ = ("value",)
+
+    def __init__(self, value: Any) -> None:
+        self.value = value
 
 
 class HadError:

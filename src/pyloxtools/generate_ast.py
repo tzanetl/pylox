@@ -39,6 +39,7 @@ def generate_ast(output_dir: Path) -> None:
             "Function   : Token name, list[Token] params, list[Stmt] body",
             "If         : Expr condition, Stmt then_branch, Stmt | None else_branch",
             "Print      : Expr expression",
+            "Return     : Token keyword, Expr | None value",
             "Var        : Token name, Expr | None initializer",
             "While      : Expr condition, Stmt body",
         ],

@@ -18,7 +18,19 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Break, Expression, Function, If, Print, Stmt, StmtVisitor, Var, While
+from pylox.stmt import (
+    Block,
+    Break,
+    Expression,
+    Function,
+    If,
+    Print,
+    Return,
+    Stmt,
+    StmtVisitor,
+    Var,
+    While,
+)
 
 
 class Unassigned:
@@ -60,7 +72,11 @@ class LoxFunction(LoxCallable):
         environment = Environment(interpreter.globals)
         for param, arg in zip(self.declaration.params, arguments):
             environment.define(param.lexeme, arg)
-        interpreter.execute_block(self.declaration.body, environment)
+
+        try:
+            interpreter.execute_block(self.declaration.body, environment)
+        except error.ReturnError as exc:
+            return exc.value
 
 
 # Builtin functions
@@ -251,6 +267,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def visit_function_stmt(self, stmt: Function) -> None:
         func = LoxFunction(stmt)
         self.environment.define(stmt.name.lexeme, func)
+
+    def visit_return_stmt(self, stmt: Return) -> None:
+        value = None
+        if stmt.value is not None:
+            value = self.evaluate(stmt.value)
+        raise error.ReturnError(value)
 
 
 def is_truthy(value: Any) -> bool:

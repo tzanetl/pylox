@@ -15,7 +15,7 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Break, Expression, Function, If, Print, Stmt, Var, While
+from pylox.stmt import Block, Break, Expression, Function, If, Print, Return, Stmt, Var, While
 
 
 class InvalidDeclatation(Stmt):
@@ -88,11 +88,13 @@ class Parser:
                     | forStmt
                     | ifStmt
                     | printStmt
+                    | returnStmt
                     | whileStmt
                     | breakStmt
                     | block ;
     exprStmt        -> expression ";" ;
     ifStmt          -> "if" "(" expression ")" statement ( "else" statement )? ;
+    returnStmt      -> "return" expression? ";" ;
     printStmt       -> "print" expression ";" ;
     whileStmt       -> "while" "(" expression ")" statement ;
     forStmt         -> "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")"
@@ -304,6 +306,8 @@ class Parser:
             return self.if_statement()
         if self.match(TokenType.PRINT):
             return self.print_statement()
+        if self.match(TokenType.RETURN):
+            return self.return_statement()
         if self.match(TokenType.WHILE):
             return self.while_statement()
         if self.match(TokenType.BREAK):
@@ -368,6 +372,14 @@ class Parser:
             self.error(self.previous(), "Must be inside a loop to use 'break'.")
         self.consume(TokenType.SEMICOLON, "Expected ';' after 'break'.")
         return Break()
+
+    def return_statement(self) -> Return:
+        keyword = self.previous()
+        value = None
+        if not self.check(TokenType.SEMICOLON):
+            value = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after return value.")
+        return Return(keyword, value)
 
     def expression_statement(self) -> Expression:
         expr = self.expression()

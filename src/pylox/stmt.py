@@ -91,6 +91,20 @@ class Print(Stmt):
         return visitor.visit_print_stmt(self)
 
 
+class Return(Stmt):
+    """Return statement"""
+
+    __slots___ = ("keyword", "value")
+
+    def __init__(self, keyword: Token, value: Expr | None) -> None:
+        super().__init__()
+        self.keyword = keyword
+        self.value = value
+
+    def accept(self, visitor: "StmtVisitor"):
+        return visitor.visit_return_stmt(self)
+
+
 class Var(Stmt):
     """Var statement"""
 
@@ -142,6 +156,10 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_print_stmt(self, stmt: Print):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_return_stmt(self, stmt: Return):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod
