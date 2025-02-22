@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
-from pylox.expr import Expr
+from pylox import expr
 from pylox.scanner import Token
 
 
@@ -40,7 +41,7 @@ class Expression(Stmt):
 
     __slots___ = ("expression",)
 
-    def __init__(self, expression: Expr) -> None:
+    def __init__(self, expression: "expr.Expr") -> None:
         super().__init__()
         self.expression = expression
 
@@ -51,13 +52,12 @@ class Expression(Stmt):
 class Function(Stmt):
     """Function statement"""
 
-    __slots___ = ("name", "params", "body")
+    __slots___ = ("name", "function")
 
-    def __init__(self, name: Token, params: list[Token], body: list[Stmt]) -> None:
+    def __init__(self, name: Token, function: "expr.Lambda") -> None:
         super().__init__()
         self.name = name
-        self.params = params
-        self.body = body
+        self.function = function
 
     def accept(self, visitor: "StmtVisitor"):
         return visitor.visit_function_stmt(self)
@@ -68,7 +68,7 @@ class If(Stmt):
 
     __slots___ = ("condition", "then_branch", "else_branch")
 
-    def __init__(self, condition: Expr, then_branch: Stmt, else_branch: Stmt | None) -> None:
+    def __init__(self, condition: "expr.Expr", then_branch: Stmt, else_branch: Stmt | None) -> None:
         super().__init__()
         self.condition = condition
         self.then_branch = then_branch
@@ -83,7 +83,7 @@ class Print(Stmt):
 
     __slots___ = ("expression",)
 
-    def __init__(self, expression: Expr) -> None:
+    def __init__(self, expression: "expr.Expr") -> None:
         super().__init__()
         self.expression = expression
 
@@ -96,7 +96,7 @@ class Return(Stmt):
 
     __slots___ = ("keyword", "value")
 
-    def __init__(self, keyword: Token, value: Expr | None) -> None:
+    def __init__(self, keyword: Token, value: Optional["expr.Expr"]) -> None:
         super().__init__()
         self.keyword = keyword
         self.value = value
@@ -110,7 +110,7 @@ class Var(Stmt):
 
     __slots___ = ("name", "initializer")
 
-    def __init__(self, name: Token, initializer: Expr | None) -> None:
+    def __init__(self, name: Token, initializer: Optional["expr.Expr"]) -> None:
         super().__init__()
         self.name = name
         self.initializer = initializer
@@ -124,7 +124,7 @@ class While(Stmt):
 
     __slots___ = ("condition", "body")
 
-    def __init__(self, condition: Expr, body: Stmt) -> None:
+    def __init__(self, condition: "expr.Expr", body: Stmt) -> None:
         super().__init__()
         self.condition = condition
         self.body = body

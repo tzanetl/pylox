@@ -16,15 +16,16 @@ def generate_ast(output_dir: Path) -> None:
         output_dir,
         "Expr",
         [
-            "Assign      : Token name, Expr value",
-            "Binary      : Expr left, Token operator, Expr right",
-            "Call        : Expr callee, Token paren, list[Expr] arguments",
-            "Grouping    : Expr expression",
-            "Literal     : Any value",
-            "Logical     : Expr left, Token operator, Expr right",
-            "Unary       : Token operator, Expr right",
-            "Conditional : Expr condition, Expr if_true, Expr if_false",
-            "Variable    : Token name",
+            "Assign       : Token name, Expr value",
+            "Binary       : Expr left, Token operator, Expr right",
+            "Call         : Expr callee, Token paren, list[Expr] arguments",
+            "Lambda       : list[Token] params, list[stmt.Stmt] body",
+            "Grouping     : Expr expression",
+            "Literal      : Any value",
+            "Logical      : Expr left, Token operator, Expr right",
+            "Unary        : Token operator, Expr right",
+            "Conditional  : Expr condition, Expr if_true, Expr if_false",
+            "Variable     : Token name",
         ],
         "expression",
     )
@@ -33,15 +34,15 @@ def generate_ast(output_dir: Path) -> None:
         output_dir,
         "Stmt",
         [
-            "Block      : list[Stmt] statements",
-            "Break      :",
-            "Expression : Expr expression",
-            "Function   : Token name, list[Token] params, list[Stmt] body",
-            "If         : Expr condition, Stmt then_branch, Stmt | None else_branch",
-            "Print      : Expr expression",
-            "Return     : Token keyword, Expr | None value",
-            "Var        : Token name, Expr | None initializer",
-            "While      : Expr condition, Stmt body",
+            "Block        : list[Stmt] statements",
+            "Break        :",
+            'Expression   : "expr.Expr" expression',
+            'Function     : Token name, "expr.Lambda" function',
+            'If           : "expr.Expr" condition, Stmt then_branch, Stmt | None else_branch',
+            'Print        : "expr.Expr" expression',
+            'Return       : Token keyword, Optional["expr.Expr"] value',
+            'Var          : Token name, Optional["expr.Expr"] initializer',
+            'While        : "expr.Expr" condition, Stmt body',
         ],
         "statement",
     )
@@ -73,14 +74,16 @@ def define_imports_expr(file: WriteLn) -> None:
     file.writeln("from abc import ABC, abstractmethod")
     file.writeln("from typing import Any")
     file.writeln("")
+    file.writeln("from pylox import stmt")
     file.writeln("from pylox.scanner import Token")
     file.writeln("\n")
 
 
 def define_imports_stmt(file: WriteLn) -> None:
     file.writeln("from abc import ABC, abstractmethod")
+    file.writeln("from typing import Optional")
     file.writeln("")
-    file.writeln("from pylox.expr import Expr")
+    file.writeln("from pylox import expr")
     file.writeln("from pylox.scanner import Token")
     file.writeln("\n")
 

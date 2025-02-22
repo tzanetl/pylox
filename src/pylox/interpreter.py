@@ -12,6 +12,7 @@ from pylox.expr import (
     Expr,
     ExprVisitor,
     Grouping,
+    Lambda,
     Literal,
     Logical,
     Unary,
@@ -60,6 +61,35 @@ class LoxFunction(LoxCallable):
 
     def __str__(self) -> str:
         return f"<fn {self.declaration.name.lexeme}>"
+
+    @property
+    def arity(self) -> int:
+        return len(self.declaration.function.params)
+
+    @arity.setter
+    def arity(self) -> None:
+        raise NotImplementedError("unreachable")
+
+    def call(self, interpreter: "Interpreter", arguments: list) -> Any:
+        environment = Environment(self.closure)
+        for param, arg in zip(self.declaration.function.params, arguments):
+            environment.define(param.lexeme, arg)
+
+        try:
+            interpreter.execute_block(self.declaration.function.body, environment)
+        except error.ReturnError as exc:
+            return exc.value
+
+
+class LoxLambda(LoxCallable):
+    __slots__ = ("declaration", "closure")
+
+    def __init__(self, declaration: Lambda, closure: Environment) -> None:
+        self.declaration = declaration
+        self.closure = closure
+
+    def __str__(self) -> str:
+        return "<anonymous fn>"
 
     @property
     def arity(self) -> int:
@@ -229,6 +259,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 expr.paren, f"Expected {callee.arity} but got {len(arguments)}."
             )
         return callee.call(self, arguments)
+
+    def visit_lambda_expr(self, expr: Lambda) -> LoxLambda:
+        return LoxLambda(expr, self.environment)
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         value = self.evaluate(stmt.expression)

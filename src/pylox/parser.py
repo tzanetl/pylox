@@ -9,6 +9,7 @@ from pylox.expr import (
     Conditional,
     Expr,
     Grouping,
+    Lambda,
     Literal,
     Logical,
     Unary,
@@ -28,6 +29,7 @@ class InvalidDeclatation(Stmt):
 
 class FunctionKind(enum.StrEnum):
     FUNCTION = enum.auto()
+    LAMBDA = enum.auto()
 
 
 def lasbo(
@@ -67,9 +69,10 @@ class Parser:
     comparison      -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
     term            -> factor ( ( "-" | "+" ) factor )* ;
     factor          -> unary ( ( "/" | "*" ) unary )* ;
-    unary           -> ( "!" | "-" ) unary | call ;
+    unary           -> ( "!" | "-" ) unary | call | lambda;
     call            -> primary ( "(" arguments? ")" )* ;
     arguments       -> equality ( "," equality )* ;
+    lambda          -> "fun" "(" parameters? ")" block ;
     primary         -> NUMBER | STRING | "true" | "false" | "nil"
                     | "(" expression ")" ;
                     | IDENTIFIER ;
@@ -129,6 +132,12 @@ class Parser:
         if self.is_at_end():
             return False
         return self.peek().type == t
+
+    def check2(self, t: TokenType, extra: int) -> bool:
+        position = self.current + extra
+        if not position < len(self.tokens):
+            return False
+        return self.tokens[position].type == t
 
     def is_at_end(self) -> bool:
         return self.peek().type == TokenType.EOF
@@ -262,6 +271,8 @@ class Parser:
             operator = self.previous()
             right = self.unary()
             return Unary(operator, right)
+        if self.match(TokenType.FUN):
+            return self.lambda_expression()
         return self.call()
 
     @lasbo(unary, TokenType.STAR, TokenType.SLASH)
@@ -388,7 +399,7 @@ class Parser:
 
     def declaration(self) -> Stmt:
         try:
-            if self.match(TokenType.FUN):
+            if self.check2(TokenType.IDENTIFIER, 1) and self.match(TokenType.FUN):
                 return self.function(FunctionKind.FUNCTION)
             if self.match(TokenType.VAR):
                 return self.var_declaration()
@@ -399,21 +410,7 @@ class Parser:
 
     def function(self, kind: FunctionKind) -> Function:
         name = self.consume(TokenType.IDENTIFIER, f"Expect {kind} name.")
-        self.consume(TokenType.LEFT_PAREN, f"Expect '(' after {kind} name.")
-
-        parameters: list[Token] = []
-        if not self.check(TokenType.RIGHT_PAREN):
-            while True:
-                if len(parameters) >= 255:
-                    self.error(self.peek(), "Can't have more than 255 parameters.")
-                parameters.append(self.consume(TokenType.IDENTIFIER, "Expected parameter name."))
-                if not self.match(TokenType.COMMA):
-                    break
-        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
-
-        self.consume(TokenType.LEFT_BRACE, f"Expect '{{' before {kind} body.")
-        body = self.block()
-        return Function(name, parameters, body)
+        return Function(name, self.lambda_expression(kind))
 
     def var_declaration(self) -> Var:
         name = self.consume(TokenType.IDENTIFIER, "Expect variable name.")
@@ -464,3 +461,23 @@ class Parser:
             expr = Logical(expr, operator, right)
 
         return expr
+
+    def lambda_expression(self, kind: FunctionKind = FunctionKind.LAMBDA) -> Lambda:
+        if kind == FunctionKind.LAMBDA:
+            self.consume(TokenType.LEFT_PAREN, "Expect '(' after lambda expression.")
+        else:
+            self.consume(TokenType.LEFT_PAREN, f"Expect '(' after {kind} name.")
+
+        parameters: list[Token] = []
+        if not self.check(TokenType.RIGHT_PAREN):
+            while True:
+                if len(parameters) >= 255:
+                    self.error(self.peek(), "Can't have more than 255 parameters.")
+                parameters.append(self.consume(TokenType.IDENTIFIER, "Expected parameter name."))
+                if not self.match(TokenType.COMMA):
+                    break
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
+
+        self.consume(TokenType.LEFT_BRACE, f"Expect '{{' before {kind} body.")
+        body = self.block()
+        return Lambda(parameters, body)

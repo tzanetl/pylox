@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from pylox import stmt
 from pylox.scanner import Token
 
 
@@ -52,6 +53,20 @@ class Call(Expr):
 
     def accept(self, visitor: "ExprVisitor"):
         return visitor.visit_call_expr(self)
+
+
+class Lambda(Expr):
+    """Lambda expression"""
+
+    __slots___ = ("params", "body")
+
+    def __init__(self, params: list[Token], body: list[stmt.Stmt]) -> None:
+        super().__init__()
+        self.params = params
+        self.body = body
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_lambda_expr(self)
 
 
 class Grouping(Expr):
@@ -148,6 +163,10 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_call_expr(self, expr: Call):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_lambda_expr(self, expr: Lambda):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod
