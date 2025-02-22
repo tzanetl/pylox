@@ -153,6 +153,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
     def evaluate(self, expr: Expr) -> Any:
         return expr.accept(self)
 
+    def resolve(self, expr: Expr, depth: int) -> None:
+        raise NotImplementedError("Not yet :)")
+
     def visit_literal_expr(self, expr: Literal) -> Any:
         return expr.value
 
