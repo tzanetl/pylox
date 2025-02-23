@@ -39,6 +39,12 @@ class FunctionType(enum.Enum):
     FUNCTION = enum.auto()
 
 
+class VariableStatus(enum.Enum):
+    DECLARED = enum.auto()
+    DEFINED = enum.auto()
+    USED = enum.auto()
+
+
 class Resolver(ExprVisitor, StmtVisitor):
     __slots__ = (
         "interpreter",
@@ -50,7 +56,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         super().__init__()
         self.interpreter = interpreter
         # dict[<variable name>: <is defined>]
-        self.scopes: deque[dict[str, bool]] = deque()
+        self.scopes: deque[dict[str, VariableStatus]] = deque()
         self.currect_function = FunctionType.NONE
 
     @overload
@@ -74,10 +80,14 @@ class Resolver(ExprVisitor, StmtVisitor):
             for stmt in target:
                 self.resolve(stmt)
 
-    def resolve_local(self, expr: Expr, name: Token) -> None:
+    def resolve_local(self, expr: Expr, name: Token, is_used: bool = False) -> None:
         for i, scope in enumerate(self.scopes):
             if name.lexeme in scope:
                 self.interpreter.resolve(expr, len(self.scopes) - 1 - i)
+
+                if is_used:
+                    scope[name.lexeme] = VariableStatus.USED
+
                 return
 
     def resolve_function(self, function: Lambda, ftype: FunctionType) -> None:
@@ -104,12 +114,12 @@ class Resolver(ExprVisitor, StmtVisitor):
             return
         if name.lexeme in self.scopes[-1]:
             error.error(name, "Already a variable with this name in this scope.")
-        self.scopes[-1][name.lexeme] = False
+        self.scopes[-1][name.lexeme] = VariableStatus.DECLARED
 
     def define(self, name: Token) -> None:
         if not len(self.scopes):
             return
-        self.scopes[-1][name.lexeme] = True
+        self.scopes[-1][name.lexeme] = VariableStatus.DEFINED
 
     def visit_block_stmt(self, stmt: Block) -> None:
         self.begin_scope()
@@ -154,9 +164,9 @@ class Resolver(ExprVisitor, StmtVisitor):
         pass
 
     def visit_variable_expr(self, expr: Variable) -> None:
-        if len(self.scopes) and self.scopes[-1][expr.name.lexeme] is False:
+        if len(self.scopes) and self.scopes[-1].get(expr.name.lexeme) == VariableStatus.DECLARED:
             error.error(expr.name, "Can't read local variable in its own initializer.")
-        self.resolve_local(expr, expr.name)
+        self.resolve_local(expr, expr.name, True)
 
     def visit_assign_expr(self, expr: Assign) -> None:
         self.resolve(expr.value)
