@@ -17,7 +17,10 @@ def run(source: str) -> None:
     if HadError.had_error:
         return
 
+    # Stop if there was a resolution error.
     resolver = Resolver(INTERPRETER)
     resolver.resolve(statements)
+    if HadError.had_error:
+        return
 
     INTERPRETER.interpret(statements)

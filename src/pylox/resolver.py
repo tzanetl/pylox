@@ -1,3 +1,4 @@
+import enum
 from collections import deque
 from typing import overload
 
@@ -33,12 +34,24 @@ from pylox.stmt import (
 )
 
 
+class FunctionType(enum.Enum):
+    NONE = enum.auto()
+    FUNCTION = enum.auto()
+
+
 class Resolver(ExprVisitor, StmtVisitor):
+    __slots__ = (
+        "interpreter",
+        "scopes",
+        "currect_function",
+    )
+
     def __init__(self, interpreter: Interpreter):
         super().__init__()
         self.interpreter = interpreter
         # dict[<variable name>: <is defined>]
         self.scopes: deque[dict[str, bool]] = deque()
+        self.currect_function = FunctionType.NONE
 
     @overload
     def resolve(self, target: list[Stmt]) -> None:  # noqa: U100
@@ -67,13 +80,18 @@ class Resolver(ExprVisitor, StmtVisitor):
                 self.interpreter.resolve(expr, len(self.scopes) - 1 - i)
                 return
 
-    def resolve_function(self, function: Lambda) -> None:
+    def resolve_function(self, function: Lambda, ftype: FunctionType) -> None:
+        enclosing_function = self.currect_function
+        self.currect_function = ftype
+
         self.begin_scope()
         for p in function.params:
             self.declare(p)
             self.define(p)
         self.resolve(function.body)
         self.end_scope()
+
+        self.currect_function = enclosing_function
 
     def begin_scope(self) -> None:
         self.scopes.append({})
@@ -84,6 +102,8 @@ class Resolver(ExprVisitor, StmtVisitor):
     def declare(self, name: Token) -> None:
         if not len(self.scopes):
             return
+        if name.lexeme in self.scopes[-1]:
+            error.error(name, "Already a variable with this name in this scope.")
         self.scopes[-1][name.lexeme] = False
 
     def define(self, name: Token) -> None:
@@ -105,7 +125,7 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_function_stmt(self, stmt: Function) -> None:
         self.declare(stmt.name)
         self.define(stmt.name)
-        self.resolve_function(stmt.function)
+        self.resolve_function(stmt.function, FunctionType.FUNCTION)
 
     def visit_expression_stmt(self, stmt: Expression) -> None:
         self.resolve(stmt.expression)
@@ -120,6 +140,9 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.resolve(stmt)
 
     def visit_return_stmt(self, stmt: Return) -> None:
+        if self.currect_function == FunctionType.NONE:
+            error.error(stmt.keyword, "Can't return from top-level code.")
+
         if stmt.value is not None:
             self.resolve(stmt.value)
 
@@ -140,7 +163,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.resolve_local(expr, expr.name)
 
     def visit_lambda_expr(self, expr: Lambda) -> None:
-        self.resolve_function(expr)
+        self.resolve_function(expr, FunctionType.FUNCTION)
 
     def visit_binary_expr(self, expr: Binary) -> None:
         self.resolve(expr.left)
