@@ -22,6 +22,7 @@ from pylox.scanner import Token, TokenType
 from pylox.stmt import (
     Block,
     Break,
+    Class,
     Expression,
     Function,
     If,
@@ -117,6 +118,16 @@ class Clock(LoxCallable):
 
     def call(self, interpreter: "Interpreter", arguments: list) -> float:  # noqa: U100
         return time.time()
+
+
+class LoxClass:
+    __slots__ = ("name",)
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def __str__(self):
+        return self.name
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -292,6 +303,11 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_block_stmt(self, stmt: Block) -> None:
         self.execute_block(stmt.statements, Environment(self.environment))
+
+    def visit_class_stmt(self, stmt: Class) -> None:
+        self.environment.define(stmt.name.lexeme, None)
+        lox_class = LoxClass(stmt.name.lexeme)
+        self.environment.assign(stmt.name, lox_class)
 
     def visit_if_stmt(self, stmt: If) -> None:
         if is_truthy(self.evaluate(stmt.condition)):

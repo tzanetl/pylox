@@ -35,6 +35,7 @@ def generate_ast(output_dir: Path) -> None:
         "Stmt",
         [
             "Block        : list[Stmt] statements",
+            'Class        : Token name, list["Function"] methods',
             "Break        :",
             'Expression   : "expr.Expr" expression',
             'Function     : Token name, "expr.Lambda" function',

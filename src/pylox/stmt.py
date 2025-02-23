@@ -24,6 +24,20 @@ class Block(Stmt):
         return visitor.visit_block_stmt(self)
 
 
+class Class(Stmt):
+    """Class statement"""
+
+    __slots___ = ("name", "methods")
+
+    def __init__(self, name: Token, methods: list["Function"]) -> None:
+        super().__init__()
+        self.name = name
+        self.methods = methods
+
+    def accept(self, visitor: "StmtVisitor"):
+        return visitor.visit_class_stmt(self)
+
+
 class Break(Stmt):
     """Break statement"""
 
@@ -136,6 +150,10 @@ class While(Stmt):
 class StmtVisitor(ABC):
     @abstractmethod
     def visit_block_stmt(self, stmt: Block):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_class_stmt(self, stmt: Class):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod

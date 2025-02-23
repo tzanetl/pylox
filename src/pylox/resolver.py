@@ -22,6 +22,7 @@ from pylox.scanner import Token
 from pylox.stmt import (
     Block,
     Break,
+    Class,
     Expression,
     Function,
     If,
@@ -130,6 +131,10 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.declare(stmt.name)
         if stmt.initializer is not None:
             self.resolve(stmt.initializer)
+        self.define(stmt.name)
+
+    def visit_class_stmt(self, stmt: Class) -> None:
+        self.declare(stmt.name)
         self.define(stmt.name)
 
     def visit_function_stmt(self, stmt: Function) -> None:

@@ -16,7 +16,19 @@ from pylox.expr import (
     Variable,
 )
 from pylox.scanner import Token, TokenType
-from pylox.stmt import Block, Break, Expression, Function, If, Print, Return, Stmt, Var, While
+from pylox.stmt import (
+    Block,
+    Break,
+    Class,
+    Expression,
+    Function,
+    If,
+    Print,
+    Return,
+    Stmt,
+    Var,
+    While,
+)
 
 
 class InvalidDeclatation(Stmt):
@@ -29,6 +41,7 @@ class InvalidDeclatation(Stmt):
 
 class FunctionKind(enum.StrEnum):
     FUNCTION = enum.auto()
+    METHOD = enum.auto()
     LAMBDA = enum.auto()
 
 
@@ -80,9 +93,11 @@ class Parser:
     Statements
     ----------
     program         -> declaration* EOF ;
-    declaration     -> funDecl
+    declaration     -> classDecl
+                    | funDecl
                     | varDecl
                     | statement ;
+    classDecl       -> "class" IDENTIFIER "{" function* "}" ;
     funDecl         -> "fun" function ;
     function        -> IDENTIFIER "(" parameters? ")" block ;
     parameters      -> IDENTIFIER ( "," IDENTIFIER )* ;
@@ -399,6 +414,8 @@ class Parser:
 
     def declaration(self) -> Stmt:
         try:
+            if self.match(TokenType.CLASS):
+                return self.class_declaration()
             if self.check2(TokenType.IDENTIFIER, 1) and self.match(TokenType.FUN):
                 return self.function(FunctionKind.FUNCTION)
             if self.match(TokenType.VAR):
@@ -407,6 +424,17 @@ class Parser:
         except error.ParseError:
             self.synchronize()
             return InvalidDeclatation()
+
+    def class_declaration(self) -> Class:
+        name = self.consume(TokenType.IDENTIFIER, "Expect class name.")
+        self.consume(TokenType.LEFT_BRACE, "Expected '{' before class body.")
+
+        methods: list[Function] = []
+        while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end():
+            methods.append(self.function(FunctionKind.METHOD))
+
+        self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
+        return Class(name, methods)
 
     def function(self, kind: FunctionKind) -> Function:
         name = self.consume(TokenType.IDENTIFIER, f"Expect {kind} name.")
