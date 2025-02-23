@@ -137,7 +137,7 @@ class Resolver(ExprVisitor, StmtVisitor):
             self.resolve(stmt.else_branch)
 
     def visit_print_stmt(self, stmt: Print) -> None:
-        self.resolve(stmt)
+        self.resolve(stmt.expression)
 
     def visit_return_stmt(self, stmt: Return) -> None:
         if self.currect_function == FunctionType.NONE:
