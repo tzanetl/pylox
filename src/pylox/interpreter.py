@@ -120,11 +120,12 @@ class Clock(LoxCallable):
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
-    __slots__ = ("environment", "is_repl", "globals")
+    __slots__ = ("environment", "is_repl", "globals", "locals")
 
     def __init__(self) -> None:
         super().__init__()
         self.globals = Environment()
+        self.locals: dict[Expr, int] = {}
         self.environment = self.globals
         self.is_repl = False
 
@@ -154,7 +155,13 @@ class Interpreter(ExprVisitor, StmtVisitor):
         return expr.accept(self)
 
     def resolve(self, expr: Expr, depth: int) -> None:
-        raise NotImplementedError("Not yet :)")
+        self.locals[expr] = depth
+
+    def look_up_variable(self, name: Token, expr: Expr) -> Any:
+        distance = self.locals.get(expr)
+        if distance is not None:
+            return self.environment.get_at(distance, name.lexeme)
+        return self.globals.get(name)
 
     def visit_literal_expr(self, expr: Literal) -> Any:
         return expr.value
@@ -230,14 +237,15 @@ class Interpreter(ExprVisitor, StmtVisitor):
         return self.evaluate(expr.if_false)
 
     def visit_variable_expr(self, expr: Variable) -> Any:
-        value = self.environment.get(expr.name)
-        if value is UNASSIGNED:
-            raise error.LoxRuntimeError(expr.name, f"Variable '{expr.name.lexeme}' is unassigned.")
-        return value
+        return self.look_up_variable(expr.name, expr)
 
     def visit_assign_expr(self, expr: Assign) -> Any:
         value = self.evaluate(expr.value)
-        self.environment.assign(expr.name, value)
+        distance = self.locals.get(expr)
+        if distance is not None:
+            self.environment.assign_at(distance, expr.name, value)
+        else:
+            self.globals.assign(expr.name, value)
         return value
 
     def visit_logical_expr(self, expr: Logical) -> Any:
