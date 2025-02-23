@@ -2,10 +2,35 @@ from collections import deque
 from typing import overload
 
 from pylox import error
-from pylox.expr import Assign, Expr, ExprVisitor, Variable
+from pylox.expr import (
+    Assign,
+    Binary,
+    Call,
+    Conditional,
+    Expr,
+    ExprVisitor,
+    Grouping,
+    Lambda,
+    Literal,
+    Logical,
+    Unary,
+    Variable,
+)
 from pylox.interpreter import Interpreter
 from pylox.scanner import Token
-from pylox.stmt import Block, Stmt, StmtVisitor, Var
+from pylox.stmt import (
+    Block,
+    Break,
+    Expression,
+    Function,
+    If,
+    Print,
+    Return,
+    Stmt,
+    StmtVisitor,
+    Var,
+    While,
+)
 
 
 class Resolver(ExprVisitor, StmtVisitor):
@@ -42,6 +67,14 @@ class Resolver(ExprVisitor, StmtVisitor):
                 self.interpreter.resolve(expr, len(self.scopes) - 1 - i)
                 return
 
+    def resolve_function(self, function: Lambda) -> None:
+        self.begin_scope()
+        for p in function.params:
+            self.declare(p)
+            self.define(p)
+        self.resolve(function.body)
+        self.end_scope()
+
     def begin_scope(self) -> None:
         self.scopes.append({})
 
@@ -69,6 +102,34 @@ class Resolver(ExprVisitor, StmtVisitor):
             self.resolve(stmt.initializer)
         self.define(stmt.name)
 
+    def visit_function_stmt(self, stmt: Function) -> None:
+        self.declare(stmt.name)
+        self.define(stmt.name)
+        self.resolve_function(stmt.function)
+
+    def visit_expression_stmt(self, stmt: Expression) -> None:
+        self.resolve(stmt.expression)
+
+    def visit_if_stmt(self, stmt: If) -> None:
+        self.resolve(stmt.condition)
+        self.resolve(stmt.then_branch)
+        if stmt.else_branch is not None:
+            self.resolve(stmt.else_branch)
+
+    def visit_print_stmt(self, stmt: Print) -> None:
+        self.resolve(stmt)
+
+    def visit_return_stmt(self, stmt: Return) -> None:
+        if stmt.value is not None:
+            self.resolve(stmt.value)
+
+    def visit_while_stmt(self, stmt: While) -> None:
+        self.resolve(stmt.condition)
+        self.resolve(stmt.body)
+
+    def visit_break_stmt(self, stmt: Break) -> None:  # noqa: U100
+        pass
+
     def visit_variable_expr(self, expr: Variable) -> None:
         if len(self.scopes) and self.scopes[-1][expr.name.lexeme] is False:
             error.error(expr.name, "Can't read local variable in its own initializer.")
@@ -77,3 +138,33 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_assign_expr(self, expr: Assign) -> None:
         self.resolve(expr.value)
         self.resolve_local(expr, expr.name)
+
+    def visit_lambda_expr(self, expr: Lambda) -> None:
+        self.resolve_function(expr)
+
+    def visit_binary_expr(self, expr: Binary) -> None:
+        self.resolve(expr.left)
+        self.resolve(expr.right)
+
+    def visit_call_expr(self, expr: Call) -> None:
+        self.resolve(expr.callee)
+        for a in expr.arguments:
+            self.resolve(a)
+
+    def visit_grouping_expr(self, expr: Grouping) -> None:
+        self.resolve(expr.expression)
+
+    def visit_literal_expr(self, expr: Literal) -> None:  # noqa: U100
+        pass
+
+    def visit_logical_expr(self, expr: Logical) -> None:
+        self.resolve(expr.left)
+        self.resolve(expr.right)
+
+    def visit_unary_expr(self, expr: Unary) -> None:
+        self.resolve(expr.right)
+
+    def visit_conditional_expr(self, expr: Conditional) -> None:
+        self.resolve(expr.condition)
+        self.resolve(expr.if_true)
+        self.resolve(expr.if_false)
