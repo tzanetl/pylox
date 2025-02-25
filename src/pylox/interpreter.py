@@ -120,14 +120,28 @@ class Clock(LoxCallable):
         return time.time()
 
 
-class LoxClass:
+class LoxClass(LoxCallable):
     __slots__ = ("name",)
 
     def __init__(self, name: str) -> None:
+        super().__init__(arity=0)
         self.name = name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
+
+    def call(self, interpreter: "Interpreter", arguments: list) -> "LoxInstance":  # noqa: U100
+        return LoxInstance(self)
+
+
+class LoxInstance:
+    __slots__ = ("klass",)
+
+    def __init__(self, klass: LoxClass) -> None:
+        self.klass = klass
+
+    def __str__(self) -> str:
+        return f"{self.klass.name} instance"
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
