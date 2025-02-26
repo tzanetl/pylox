@@ -8,10 +8,12 @@ from pylox.expr import (
     Call,
     Conditional,
     Expr,
+    Get,
     Grouping,
     Lambda,
     Literal,
     Logical,
+    Set,
     Unary,
     Variable,
 )
@@ -73,7 +75,7 @@ class Parser:
     -----------
     expression      -> comma ;
     comma           -> assignment ( "," assignment )* ;
-    assignment      -> IDENTIFIER "=" assignment
+    assignment      -> ( call "." )? IDENTIFIER "=" assignment
                     | logic_or ;
     logic_or        -> logic_and ( "or" logic_and )* ;
     logic_and       -> conditional ( "and" conditional )* ;
@@ -83,7 +85,7 @@ class Parser:
     term            -> factor ( ( "-" | "+" ) factor )* ;
     factor          -> unary ( ( "/" | "*" ) unary )* ;
     unary           -> ( "!" | "-" ) unary | call | lambda;
-    call            -> primary ( "(" arguments? ")" )* ;
+    call            -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
     arguments       -> equality ( "," equality )* ;
     lambda          -> "fun" "(" parameters? ")" block ;
     primary         -> NUMBER | STRING | "true" | "false" | "nil"
@@ -212,6 +214,8 @@ class Parser:
             if isinstance(expr, Variable):
                 name = expr.name
                 return Assign(name, value)
+            elif isinstance(expr, Get):
+                return Set(expr.object, expr.name, value)
             self.error(equals, "Invalid assignment target.")
 
         return expr
@@ -276,6 +280,9 @@ class Parser:
         while True:
             if self.match(TokenType.LEFT_PAREN):
                 expr = self.finish_call(expr)
+            elif self.match(TokenType.DOT):
+                name = self.consume(TokenType.IDENTIFIER, "Expect property name after '.'.")
+                expr = Get(expr, name)
             else:
                 break
 

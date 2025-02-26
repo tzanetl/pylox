@@ -55,18 +55,18 @@ class Call(Expr):
         return visitor.visit_call_expr(self)
 
 
-class Lambda(Expr):
-    """Lambda expression"""
+class Get(Expr):
+    """Get expression"""
 
-    __slots___ = ("params", "body")
+    __slots___ = ("object", "name")
 
-    def __init__(self, params: list[Token], body: list[stmt.Stmt]) -> None:
+    def __init__(self, object: Expr, name: Token) -> None:
         super().__init__()
-        self.params = params
-        self.body = body
+        self.object = object
+        self.name = name
 
     def accept(self, visitor: "ExprVisitor"):
-        return visitor.visit_lambda_expr(self)
+        return visitor.visit_get_expr(self)
 
 
 class Grouping(Expr):
@@ -80,6 +80,20 @@ class Grouping(Expr):
 
     def accept(self, visitor: "ExprVisitor"):
         return visitor.visit_grouping_expr(self)
+
+
+class Lambda(Expr):
+    """Lambda expression"""
+
+    __slots___ = ("params", "body")
+
+    def __init__(self, params: list[Token], body: list[stmt.Stmt]) -> None:
+        super().__init__()
+        self.params = params
+        self.body = body
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_lambda_expr(self)
 
 
 class Literal(Expr):
@@ -108,6 +122,21 @@ class Logical(Expr):
 
     def accept(self, visitor: "ExprVisitor"):
         return visitor.visit_logical_expr(self)
+
+
+class Set(Expr):
+    """Set expression"""
+
+    __slots___ = ("object", "name", "value")
+
+    def __init__(self, object: Expr, name: Token, value: Expr) -> None:
+        super().__init__()
+        self.object = object
+        self.name = name
+        self.value = value
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_set_expr(self)
 
 
 class Unary(Expr):
@@ -166,11 +195,15 @@ class ExprVisitor(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def visit_lambda_expr(self, expr: Lambda):  # noqa: U100
+    def visit_get_expr(self, expr: Get):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod
     def visit_grouping_expr(self, expr: Grouping):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_lambda_expr(self, expr: Lambda):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod
@@ -179,6 +212,10 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_logical_expr(self, expr: Logical):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_set_expr(self, expr: Set):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod

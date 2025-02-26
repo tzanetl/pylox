@@ -11,10 +11,12 @@ from pylox.expr import (
     Conditional,
     Expr,
     ExprVisitor,
+    Get,
     Grouping,
     Lambda,
     Literal,
     Logical,
+    Set,
     Unary,
     Variable,
 )
@@ -135,13 +137,22 @@ class LoxClass(LoxCallable):
 
 
 class LoxInstance:
-    __slots__ = ("klass",)
+    __slots__ = ("klass", "fields")
 
     def __init__(self, klass: LoxClass) -> None:
         self.klass = klass
+        self.fields: dict[str, Any] = {}
 
     def __str__(self) -> str:
         return f"{self.klass.name} instance"
+
+    def get(self, name: Token) -> Any:
+        if name.lexeme in self.fields:
+            return self.fields[name.lexeme]
+        raise error.LoxRuntimeError(name, f"Undefined property {name.lexeme}.")
+
+    def set(self, name: Token, value: Any) -> None:
+        self.fields[name.lexeme] = value
 
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -295,6 +306,20 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 expr.paren, f"Expected {callee.arity} but got {len(arguments)}."
             )
         return callee.call(self, arguments)
+
+    def visit_get_expr(self, expr: Get) -> Any:
+        obj = self.evaluate(expr.object)
+        if isinstance(obj, LoxInstance):
+            return obj.get(expr.name)
+        raise error.LoxRuntimeError(expr.name, "Only instances have properties.")
+
+    def visit_set_expr(self, expr: Set) -> Any:
+        obj = self.evaluate(expr.object)
+        if not isinstance(obj, LoxInstance):
+            raise error.LoxRuntimeError(expr.name, "Only instances have fields.")
+        value = self.evaluate(expr.value)
+        obj.set(expr.name, value)
+        return value
 
     def visit_lambda_expr(self, expr: Lambda) -> LoxLambda:
         return LoxLambda(expr, self.environment)

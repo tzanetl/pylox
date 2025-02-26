@@ -10,10 +10,12 @@ from pylox.expr import (
     Conditional,
     Expr,
     ExprVisitor,
+    Get,
     Grouping,
     Lambda,
     Literal,
     Logical,
+    Set,
     Unary,
     Variable,
 )
@@ -206,3 +208,10 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.resolve(expr.condition)
         self.resolve(expr.if_true)
         self.resolve(expr.if_false)
+
+    def visit_get_expr(self, expr: Get) -> None:
+        self.resolve(expr.object)
+
+    def visit_set_expr(self, expr: Set) -> None:
+        self.resolve(expr.value)
+        self.resolve(expr.object)
