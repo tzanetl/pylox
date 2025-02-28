@@ -24,7 +24,7 @@ def generate_ast(output_dir: Path) -> None:
             "Lambda       : list[Token] params, list[stmt.Stmt] body",
             "Literal      : Any value",
             "Logical      : Expr left, Token operator, Expr right",
-            "Set      : Expr object, Token name, Expr value",
+            "Set          : Expr object, Token name, Expr value",
             "Unary        : Token operator, Expr right",
             "Conditional  : Expr condition, Expr if_true, Expr if_false",
             "Variable     : Token name",

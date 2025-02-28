@@ -40,6 +40,7 @@ from pylox.stmt import (
 class FunctionType(enum.Enum):
     NONE = enum.auto()
     FUNCTION = enum.auto()
+    METHOD = enum.auto()
 
 
 class VariableStatus(enum.Enum):
@@ -137,6 +138,10 @@ class Resolver(ExprVisitor, StmtVisitor):
 
     def visit_class_stmt(self, stmt: Class) -> None:
         self.declare(stmt.name)
+
+        for method in stmt.methods:
+            self.resolve_function(method.function, FunctionType.METHOD)
+
         self.define(stmt.name)
 
     def visit_function_stmt(self, stmt: Function) -> None:

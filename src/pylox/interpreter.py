@@ -123,17 +123,21 @@ class Clock(LoxCallable):
 
 
 class LoxClass(LoxCallable):
-    __slots__ = ("name",)
+    __slots__ = ("name", "methods")
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, methods: dict[str, LoxFunction]) -> None:
         super().__init__(arity=0)
         self.name = name
+        self.methods = methods
 
     def __str__(self) -> str:
         return self.name
 
     def call(self, interpreter: "Interpreter", arguments: list) -> "LoxInstance":  # noqa: U100
         return LoxInstance(self)
+
+    def find_method(self, name: str) -> LoxFunction | None:
+        return self.methods.get(name)
 
 
 class LoxInstance:
@@ -149,6 +153,10 @@ class LoxInstance:
     def get(self, name: Token) -> Any:
         if name.lexeme in self.fields:
             return self.fields[name.lexeme]
+
+        method = self.klass.find_method(name.lexeme)
+        if method:
+            return method
         raise error.LoxRuntimeError(name, f"Undefined property {name.lexeme}.")
 
     def set(self, name: Token, value: Any) -> None:
@@ -345,7 +353,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
     def visit_class_stmt(self, stmt: Class) -> None:
         self.environment.define(stmt.name.lexeme, None)
-        lox_class = LoxClass(stmt.name.lexeme)
+
+        methods = {}
+        for method in stmt.methods:
+            methods[method.name.lexeme] = LoxFunction(method, self.environment)
+
+        lox_class = LoxClass(stmt.name.lexeme, methods)
         self.environment.assign(stmt.name, lox_class)
 
     def visit_if_stmt(self, stmt: If) -> None:
