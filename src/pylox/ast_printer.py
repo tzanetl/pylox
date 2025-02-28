@@ -1,3 +1,5 @@
+# type: ignore
+
 from pylox.expr import Binary, Conditional, Expr, ExprVisitor, Grouping, Literal, Unary
 from pylox.scanner import Token, TokenType
 

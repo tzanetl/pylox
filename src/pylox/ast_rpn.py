@@ -1,3 +1,4 @@
+# type: ignore
 """Reverse Polish Notation for AST
 
 Chapter 5, Challenge 3

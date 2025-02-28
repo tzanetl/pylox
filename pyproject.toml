@@ -36,8 +36,8 @@ version = {attr = "pylox.version.__version__"}
 description = {file = "src/pylox/DESCRIPTION"}
 
 [tool.mypy]
-enable_incomplete_feature = ["NewGenericSyntax"]
-packages = "src"
+packages = ["pylox", "pyloxtools"]
+explicit_package_bases = true
 
 [tool.flake8]
 max-line-length = 100
