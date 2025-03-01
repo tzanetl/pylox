@@ -17,6 +17,7 @@ from pylox.expr import (
     Literal,
     Logical,
     Set,
+    This,
     Unary,
     Variable,
 )
@@ -82,6 +83,11 @@ class LoxFunction(LoxCallable):
             interpreter.execute_block(self.declaration.function.body, environment)
         except error.ReturnError as exc:
             return exc.value
+
+    def bind(self, instance: "LoxInstance") -> "LoxFunction":
+        environement = Environment(self.closure)
+        environement.define("this", instance)
+        return LoxFunction(self.declaration, environement)
 
 
 class LoxLambda(LoxCallable):
@@ -156,7 +162,7 @@ class LoxInstance:
 
         method = self.klass.find_method(name.lexeme)
         if method:
-            return method
+            return method.bind(self)
         raise error.LoxRuntimeError(name, f"Undefined property {name.lexeme}.")
 
     def set(self, name: Token, value: Any) -> None:
@@ -328,6 +334,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
         value = self.evaluate(expr.value)
         obj.set(expr.name, value)
         return value
+
+    def visit_this_expr(self, expr: This) -> Any:
+        return self.look_up_variable(expr.keyword, expr)
 
     def visit_lambda_expr(self, expr: Lambda) -> LoxLambda:
         return LoxLambda(expr, self.environment)

@@ -25,6 +25,7 @@ def generate_ast(output_dir: Path) -> None:
             "Literal      : Any value",
             "Logical      : Expr left, Token operator, Expr right",
             "Set          : Expr object, Token name, Expr value",
+            "This         : Token keyword",
             "Unary        : Token operator, Expr right",
             "Conditional  : Expr condition, Expr if_true, Expr if_false",
             "Variable     : Token name",

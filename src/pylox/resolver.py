@@ -16,6 +16,7 @@ from pylox.expr import (
     Literal,
     Logical,
     Set,
+    This,
     Unary,
     Variable,
 )
@@ -37,6 +38,11 @@ from pylox.stmt import (
 )
 
 
+class ClassType(enum.Enum):
+    NONE = enum.auto()
+    CLASS = enum.auto()
+
+
 class FunctionType(enum.Enum):
     NONE = enum.auto()
     FUNCTION = enum.auto()
@@ -53,7 +59,8 @@ class Resolver(ExprVisitor, StmtVisitor):
     __slots__ = (
         "interpreter",
         "scopes",
-        "currect_function",
+        "current_class",
+        "current_function",
     )
 
     def __init__(self, interpreter: Interpreter):
@@ -61,7 +68,8 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.interpreter = interpreter
         # dict[<variable name>: <is defined>]
         self.scopes: deque[dict[str, VariableStatus]] = deque()
-        self.currect_function = FunctionType.NONE
+        self.current_class = ClassType.NONE
+        self.current_function = FunctionType.NONE
 
     @overload
     def resolve(self, target: list[Stmt]) -> None:  # noqa: U100
@@ -95,8 +103,8 @@ class Resolver(ExprVisitor, StmtVisitor):
                 return
 
     def resolve_function(self, function: Lambda, ftype: FunctionType) -> None:
-        enclosing_function = self.currect_function
-        self.currect_function = ftype
+        enclosing_function = self.current_function
+        self.current_function = ftype
 
         self.begin_scope()
         for p in function.params:
@@ -105,7 +113,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.resolve(function.body)
         self.end_scope()
 
-        self.currect_function = enclosing_function
+        self.current_function = enclosing_function
 
     def begin_scope(self) -> None:
         self.scopes.append({})
@@ -137,12 +145,20 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.define(stmt.name)
 
     def visit_class_stmt(self, stmt: Class) -> None:
+        enclosing_class = self.current_class
+        self.current_class = ClassType.CLASS
+
         self.declare(stmt.name)
+
+        self.begin_scope()
+        self.scopes[-1]["this"] = VariableStatus.USED
 
         for method in stmt.methods:
             self.resolve_function(method.function, FunctionType.METHOD)
 
         self.define(stmt.name)
+        self.end_scope()
+        self.current_class = enclosing_class
 
     def visit_function_stmt(self, stmt: Function) -> None:
         self.declare(stmt.name)
@@ -162,7 +178,7 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.resolve(stmt.expression)
 
     def visit_return_stmt(self, stmt: Return) -> None:
-        if self.currect_function == FunctionType.NONE:
+        if self.current_function == FunctionType.NONE:
             error.error(stmt.keyword, "Can't return from top-level code.")
 
         if stmt.value is not None:
@@ -220,3 +236,9 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_set_expr(self, expr: Set) -> None:
         self.resolve(expr.value)
         self.resolve(expr.object)
+
+    def visit_this_expr(self, expr: This) -> None:
+        if self.current_class == ClassType.NONE:
+            error.error(expr.keyword, "Can't use 'this' outside of a class.")
+
+        self.resolve_local(expr, expr.keyword)

@@ -139,6 +139,19 @@ class Set(Expr):
         return visitor.visit_set_expr(self)
 
 
+class This(Expr):
+    """This expression"""
+
+    __slots___ = ("keyword",)
+
+    def __init__(self, keyword: Token) -> None:
+        super().__init__()
+        self.keyword = keyword
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_this_expr(self)
+
+
 class Unary(Expr):
     """Unary expression"""
 
@@ -216,6 +229,10 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_set_expr(self, expr: Set):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_this_expr(self, expr: This):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod

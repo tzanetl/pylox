@@ -14,6 +14,7 @@ from pylox.expr import (
     Literal,
     Logical,
     Set,
+    This,
     Unary,
     Variable,
 )
@@ -88,8 +89,8 @@ class Parser:
     call            -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
     arguments       -> equality ( "," equality )* ;
     lambda          -> "fun" "(" parameters? ")" block ;
-    primary         -> NUMBER | STRING | "true" | "false" | "nil"
-                    | "(" expression ")" ;
+    primary         -> NUMBER | STRING | "true" | "false" | "nil" | "this"
+                    | "(" expression ")"
                     | IDENTIFIER ;
 
     Statements
@@ -223,13 +224,18 @@ class Parser:
     def primary(self) -> Expr:
         if self.match(TokenType.FALSE):
             return Literal(False)
+
         if self.match(TokenType.TRUE):
             return Literal(True)
+
         if self.match(TokenType.NIL):
             return Literal(None)
 
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self.previous().literal)
+
+        if self.match(TokenType.THIS):
+            return This(self.previous())
 
         if self.match(TokenType.IDENTIFIER):
             return Variable(self.previous())
