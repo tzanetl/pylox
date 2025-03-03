@@ -57,11 +57,12 @@ class LoxCallable(ABC):
 
 
 class LoxFunction(LoxCallable):
-    __slots__ = ("declaration", "closure")
+    __slots__ = ("declaration", "closure", "is_initializer")
 
-    def __init__(self, declaration: Function, closure: Environment) -> None:
+    def __init__(self, declaration: Function, closure: Environment, is_initializer: bool) -> None:
         self.declaration = declaration
         self.closure = closure
+        self.is_initializer = is_initializer
 
     def __str__(self) -> str:
         return f"<fn {self.declaration.name.lexeme}>"
@@ -82,12 +83,17 @@ class LoxFunction(LoxCallable):
         try:
             interpreter.execute_block(self.declaration.function.body, environment)
         except error.ReturnError as exc:
+            if self.is_initializer:
+                return self.closure.get_at(0, "this")
             return exc.value
+
+        if self.is_initializer:
+            return self.closure.get_at(0, "this")
 
     def bind(self, instance: "LoxInstance") -> "LoxFunction":
         environement = Environment(self.closure)
         environement.define("this", instance)
-        return LoxFunction(self.declaration, environement)
+        return LoxFunction(self.declaration, environement, self.is_initializer)
 
 
 class LoxLambda(LoxCallable):
@@ -139,8 +145,23 @@ class LoxClass(LoxCallable):
     def __str__(self) -> str:
         return self.name
 
+    @property
+    def arity(self) -> int:
+        initialiser = self.find_method("init")
+        if not initialiser:
+            return 0
+        return initialiser.arity
+
+    @arity.setter
+    def arity(self):
+        raise NotImplementedError("unreachable")
+
     def call(self, interpreter: "Interpreter", arguments: list) -> "LoxInstance":  # noqa: U100
-        return LoxInstance(self)
+        instance = LoxInstance(self)
+        initializer = self.find_method("init")
+        if initializer:
+            initializer.bind(instance).call(interpreter, arguments)
+        return instance
 
     def find_method(self, name: str) -> LoxFunction | None:
         return self.methods.get(name)
@@ -365,7 +386,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
         methods = {}
         for method in stmt.methods:
-            methods[method.name.lexeme] = LoxFunction(method, self.environment)
+            methods[method.name.lexeme] = LoxFunction(
+                method, self.environment, method.name.lexeme == "init"
+            )
 
         lox_class = LoxClass(stmt.name.lexeme, methods)
         self.environment.assign(stmt.name, lox_class)
@@ -387,7 +410,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
         raise error.BreakWhileError()
 
     def visit_function_stmt(self, stmt: Function) -> None:
-        func = LoxFunction(stmt, self.environment)
+        func = LoxFunction(stmt, self.environment, False)
         self.environment.define(stmt.name.lexeme, func)
 
     def visit_return_stmt(self, stmt: Return) -> None:

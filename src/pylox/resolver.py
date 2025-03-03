@@ -46,6 +46,7 @@ class ClassType(enum.Enum):
 class FunctionType(enum.Enum):
     NONE = enum.auto()
     FUNCTION = enum.auto()
+    INITIALIZER = enum.auto()
     METHOD = enum.auto()
 
 
@@ -154,7 +155,10 @@ class Resolver(ExprVisitor, StmtVisitor):
         self.scopes[-1]["this"] = VariableStatus.USED
 
         for method in stmt.methods:
-            self.resolve_function(method.function, FunctionType.METHOD)
+            declaration = FunctionType.METHOD
+            if method.name.lexeme == "init":
+                declaration = FunctionType.INITIALIZER
+            self.resolve_function(method.function, declaration)
 
         self.define(stmt.name)
         self.end_scope()
@@ -182,6 +186,8 @@ class Resolver(ExprVisitor, StmtVisitor):
             error.error(stmt.keyword, "Can't return from top-level code.")
 
         if stmt.value is not None:
+            if self.current_function == FunctionType.INITIALIZER:
+                error.error(stmt.keyword, "Can't return a value from an initializer.")
             self.resolve(stmt.value)
 
     def visit_while_stmt(self, stmt: While) -> None:
