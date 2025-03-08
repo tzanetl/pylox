@@ -38,7 +38,8 @@ def generate_ast(output_dir: Path) -> None:
         "Stmt",
         [
             "Block       : list[Stmt] statements",
-            'Class       : Token name, "expr.Variable" | None superclass, list["Function"] methods',
+            'Class       : Token name, Optional["expr.Variable"] superclass, '
+            'list["Function"] methods',
             "Break       :",
             'Expression  : "expr.Expr" expression',
             'Function    : Token name, "expr.Lambda" function',

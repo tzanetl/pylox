@@ -1,6 +1,6 @@
 import time
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 import pylox.error as error
 from pylox.environment import Environment
@@ -138,9 +138,8 @@ class LoxClass(LoxCallable):
     __slots__ = ("name", "superclass", "methods")
 
     def __init__(
-        self, name: str, superclass: "LoxClass" | None, methods: dict[str, LoxFunction]
+        self, name: str, superclass: Optional["LoxClass"], methods: dict[str, LoxFunction]
     ) -> None:
-        super().__init__(arity=0)
         self.name = name
         self.superclass = superclass
         self.methods = methods
@@ -167,7 +166,13 @@ class LoxClass(LoxCallable):
         return instance
 
     def find_method(self, name: str) -> LoxFunction | None:
-        return self.methods.get(name)
+        if name in self.methods:
+            return self.methods[name]
+
+        if self.superclass is not None:
+            return self.superclass.find_method(name)
+
+        return None
 
 
 class LoxInstance:
