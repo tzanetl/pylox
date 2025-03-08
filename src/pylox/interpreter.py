@@ -135,11 +135,14 @@ class Clock(LoxCallable):
 
 
 class LoxClass(LoxCallable):
-    __slots__ = ("name", "methods")
+    __slots__ = ("name", "superclass", "methods")
 
-    def __init__(self, name: str, methods: dict[str, LoxFunction]) -> None:
+    def __init__(
+        self, name: str, superclass: "LoxClass" | None, methods: dict[str, LoxFunction]
+    ) -> None:
         super().__init__(arity=0)
         self.name = name
+        self.superclass = superclass
         self.methods = methods
 
     def __str__(self) -> str:
@@ -382,6 +385,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.execute_block(stmt.statements, Environment(self.environment))
 
     def visit_class_stmt(self, stmt: Class) -> None:
+        superclass = None
+        if stmt.superclass is not None:
+            superclass = self.evaluate(stmt.superclass)
+            if not isinstance(superclass, LoxClass):
+                raise error.LoxRuntimeError(stmt.superclass.name, "Superclass must be a class.")
+
         self.environment.define(stmt.name.lexeme, None)
 
         methods = {}
@@ -390,7 +399,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
                 method, self.environment, method.name.lexeme == "init"
             )
 
-        lox_class = LoxClass(stmt.name.lexeme, methods)
+        lox_class = LoxClass(stmt.name.lexeme, superclass, methods)
         self.environment.assign(stmt.name, lox_class)
 
     def visit_if_stmt(self, stmt: If) -> None:

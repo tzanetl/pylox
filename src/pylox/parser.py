@@ -100,7 +100,7 @@ class Parser:
                     | funDecl
                     | varDecl
                     | statement ;
-    classDecl       -> "class" IDENTIFIER "{" function* "}" ;
+    classDecl       -> "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}" ;
     funDecl         -> "fun" function ;
     function        -> IDENTIFIER "(" parameters? ")" block ;
     parameters      -> IDENTIFIER ( "," IDENTIFIER )* ;
@@ -440,6 +440,12 @@ class Parser:
 
     def class_declaration(self) -> Class:
         name = self.consume(TokenType.IDENTIFIER, "Expect class name.")
+
+        superclass = None
+        if self.match(TokenType.LESS):
+            self.consume(TokenType.IDENTIFIER, "Expext superclass name.")
+            superclass = Variable(self.previous())
+
         self.consume(TokenType.LEFT_BRACE, "Expected '{' before class body.")
 
         methods: list[Function] = []
@@ -447,7 +453,7 @@ class Parser:
             methods.append(self.function(FunctionKind.METHOD))
 
         self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
-        return Class(name, methods)
+        return Class(name, superclass, methods)
 
     def function(self, kind: FunctionKind) -> Function:
         name = self.consume(TokenType.IDENTIFIER, f"Expect {kind} name.")

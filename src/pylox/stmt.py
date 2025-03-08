@@ -27,11 +27,12 @@ class Block(Stmt):
 class Class(Stmt):
     """Class statement"""
 
-    __slots___ = ("name", "methods")
+    __slots___ = ("name", "superclass", "methods")
 
-    def __init__(self, name: Token, methods: list["Function"]) -> None:
+    def __init__(self, name: Token, superclass: "expr.Variable" | None, methods: list["Function"]) -> None:
         super().__init__()
         self.name = name
+        self.superclass = superclass
         self.methods = methods
 
     def accept(self, visitor: "StmtVisitor"):
