@@ -14,6 +14,7 @@ from pylox.expr import (
     Literal,
     Logical,
     Set,
+    Super,
     This,
     Unary,
     Variable,
@@ -91,7 +92,8 @@ class Parser:
     lambda          -> "fun" "(" parameters? ")" block ;
     primary         -> NUMBER | STRING | "true" | "false" | "nil" | "this"
                     | "(" expression ")"
-                    | IDENTIFIER ;
+                    | IDENTIFIER
+                    | "super" "." IDENTIFIER ;
 
     Statements
     ----------
@@ -233,6 +235,12 @@ class Parser:
 
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self.previous().literal)
+
+        if self.match(TokenType.SUPER):
+            keyword = self.previous()
+            self.consume(TokenType.DOT, "Expect '.' after 'super'.")
+            method = self.consume(TokenType.IDENTIFIER, "Expect superclass method name.")
+            return Super(keyword, method)
 
         if self.match(TokenType.THIS):
             return This(self.previous())

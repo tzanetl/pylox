@@ -17,6 +17,7 @@ from pylox.expr import (
     Literal,
     Logical,
     Set,
+    Super,
     This,
     Unary,
     Variable,
@@ -364,6 +365,17 @@ class Interpreter(ExprVisitor, StmtVisitor):
         obj.set(expr.name, value)
         return value
 
+    def visit_super_expr(self, expr: Super) -> Any:
+        distance = self.locals[expr]
+        superclass: LoxClass = self.environment.get_at(distance, "super")
+        # object is python builtin
+        instance: LoxInstance = self.environment.get_at(distance - 1, "this")
+        method = superclass.find_method(expr.method.lexeme)
+        if method is None:
+            raise error.LoxRuntimeError(expr.method, f"Undefined property '{expr.method.lexeme}'.")
+
+        return method.bind(instance)
+
     def visit_this_expr(self, expr: This) -> Any:
         return self.look_up_variable(expr.keyword, expr)
 
@@ -390,22 +402,32 @@ class Interpreter(ExprVisitor, StmtVisitor):
         self.execute_block(stmt.statements, Environment(self.environment))
 
     def visit_class_stmt(self, stmt: Class) -> None:
+        # Hack to acchieve the same shadowing of class properties that Java has
+        class_environment = self.environment
         superclass = None
         if stmt.superclass is not None:
             superclass = self.evaluate(stmt.superclass)
             if not isinstance(superclass, LoxClass):
                 raise error.LoxRuntimeError(stmt.superclass.name, "Superclass must be a class.")
 
-        self.environment.define(stmt.name.lexeme, None)
+        class_environment.define(stmt.name.lexeme, None)
+
+        if stmt.superclass is not None:
+            class_environment = Environment(class_environment)
+            class_environment.define("super", superclass)
 
         methods = {}
         for method in stmt.methods:
             methods[method.name.lexeme] = LoxFunction(
-                method, self.environment, method.name.lexeme == "init"
+                method, class_environment, method.name.lexeme == "init"
             )
 
         lox_class = LoxClass(stmt.name.lexeme, superclass, methods)
-        self.environment.assign(stmt.name, lox_class)
+
+        if stmt.superclass is not None:
+            class_environment = class_environment.enclosing
+
+        class_environment.assign(stmt.name, lox_class)
 
     def visit_if_stmt(self, stmt: If) -> None:
         if is_truthy(self.evaluate(stmt.condition)):

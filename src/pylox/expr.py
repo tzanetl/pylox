@@ -139,6 +139,20 @@ class Set(Expr):
         return visitor.visit_set_expr(self)
 
 
+class Super(Expr):
+    """Super expression"""
+
+    __slots___ = ("keyword", "method")
+
+    def __init__(self, keyword: Token, method: Token) -> None:
+        super().__init__()
+        self.keyword = keyword
+        self.method = method
+
+    def accept(self, visitor: "ExprVisitor"):
+        return visitor.visit_super_expr(self)
+
+
 class This(Expr):
     """This expression"""
 
@@ -229,6 +243,10 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_set_expr(self, expr: Set):  # noqa: U100
+        raise NotImplementedError()
+
+    @abstractmethod
+    def visit_super_expr(self, expr: Super):  # noqa: U100
         raise NotImplementedError()
 
     @abstractmethod

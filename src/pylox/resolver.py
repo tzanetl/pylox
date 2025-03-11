@@ -16,6 +16,7 @@ from pylox.expr import (
     Literal,
     Logical,
     Set,
+    Super,
     This,
     Unary,
     Variable,
@@ -41,6 +42,7 @@ from pylox.stmt import (
 class ClassType(enum.Enum):
     NONE = enum.auto()
     CLASS = enum.auto()
+    SUBCLASS = enum.auto()
 
 
 class FunctionType(enum.Enum):
@@ -155,7 +157,12 @@ class Resolver(ExprVisitor, StmtVisitor):
             error.error(stmt.superclass.name, "A class can't inherit from itself.")
 
         if stmt.superclass is not None:
+            self.current_class = ClassType.SUBCLASS
             self.resolve(stmt.superclass)
+
+        if stmt.superclass is not None:
+            self.begin_scope()
+            self.scopes[-1]["super"] = VariableStatus.USED
 
         self.begin_scope()
         self.scopes[-1]["this"] = VariableStatus.USED
@@ -168,6 +175,10 @@ class Resolver(ExprVisitor, StmtVisitor):
 
         self.define(stmt.name)
         self.end_scope()
+
+        if stmt.superclass is not None:
+            self.end_scope()
+
         self.current_class = enclosing_class
 
     def visit_function_stmt(self, stmt: Function) -> None:
@@ -248,6 +259,14 @@ class Resolver(ExprVisitor, StmtVisitor):
     def visit_set_expr(self, expr: Set) -> None:
         self.resolve(expr.value)
         self.resolve(expr.object)
+
+    def visit_super_expr(self, expr: Super) -> None:
+        if self.current_class == ClassType.NONE:
+            error.error(expr.keyword, "Can't use 'super' outside of a class.")
+        elif self.current_class != ClassType.SUBCLASS:
+            error.error(expr.keyword, "Can't use 'super' in a class with no superclass.")
+
+        self.resolve_local(expr, expr.keyword)
 
     def visit_this_expr(self, expr: This) -> None:
         if self.current_class == ClassType.NONE:

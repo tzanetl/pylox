@@ -29,9 +29,7 @@ class Class(Stmt):
 
     __slots___ = ("name", "superclass", "methods")
 
-    def __init__(
-        self, name: Token, superclass: Optional["expr.Variable"], methods: list["Function"]
-    ) -> None:
+    def __init__(self, name: Token, superclass: Optional["expr.Variable"], methods: list["Function"]) -> None:
         super().__init__()
         self.name = name
         self.superclass = superclass
